@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sparkles } from "lucide-react";
+import { Sparkles, LogOut } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS, isActive } from "./nav-items";
+import { logoutAction } from "@/app/login/actions";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -48,8 +49,19 @@ export function Sidebar() {
         </nav>
 
         <div className="border-t border-border px-5 py-4">
-          <p className="text-xs text-muted">Bepul tarif rejimi</p>
-          <p className="mt-1 text-xs text-muted/80">v0.1 · MVP</p>
+          <div className="flex items-center justify-between text-xs text-muted">
+            <span>Bepul tarif rejimi</span>
+            <span className="font-mono text-[11px] opacity-75">v0.1 · MVP</span>
+          </div>
+          <form action={logoutAction} className="mt-3">
+            <button
+              type="submit"
+              className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-danger transition"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Chiqish</span>
+            </button>
+          </form>
         </div>
       </div>
     </aside>

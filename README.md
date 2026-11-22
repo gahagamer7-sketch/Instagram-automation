@@ -53,13 +53,13 @@ Lokal baza PostgreSQL wire-protokolini taqlid qiladi, shuning uchun `DATABASE_UR
 `?pgbouncer=true&connection_limit=1` bilan beriladi. Ishlab chiqarishda
 (Neon/Supabase) bu parametrlar kerak emas — kod o'zgarmaydi, faqat URL almashadi.
 
-## Hozirgi holat (MVP progressi)
+## Hozirgi holat (To'liq ishlab chiqilgan MVP)
 
-Bajarildi:
+Barcha asosiy bosqichlar to'liq amalga oshirildi:
 
 - **Monorepo & DB**: Prisma sxemasi (12 jadval), AES-256-GCM shifrlash, PGlite dev-baza va seed.
 - **AI Adapteri**: Gemini matn, TTS (o'zbekcha tabiiy ovoz), embedding va wav utils.
-- **Sozlamalar & API Kalitlar**: Gemini va YouTube API kalitlari, oxirgi 4 belgi, xarajat limitlari, "Ulanishni tekshirish".
+- **Sozlamalar & API Kalitlar (`/settings`)**: Gemini va YouTube API kalitlari, oxirgi 4 belgi, xarajat limitlari, "Ulanishni tekshirish".
 - **Skill Muharriri (`/settings/skill`)**: matn tahriri, `.md` yuklash, versiyalar tarixi va faol versiya boshqaruvi.
 - **Nisha Kashfiyotchisi (`/niche`)**: YouTube (UZ) va Gemini signallari, 5 mezonli ballash (talab, raqobat, avtomat., monetiz., zaxira), g'olibni tanlash va kanalga biriktirish.
 - **Brend Studiyasi (`/brand`)**: 10 nom varianti, slogan, bio (150 belgigacha), 4 xil 1080x1080 vektorli SVG avatar va 9:16 Reels muqova shabloni, SVG yuklab olish.
@@ -67,25 +67,22 @@ Bajarildi:
 - **Ssenariy & QA Engine (`@autochannel/core`)**: Hook (0-3s), Shot List, TTS ovozli matn, Captions, Hashtaglar, qat'iy xavfsizlik va Meta qoidalari filtri.
 - **Reels Kutubxonasi (`/reels`)**: 9:16 kartalar, ssenariyni ko'rish modali, statuslar bo'yicha filtr.
 - **Jonli Pipeline (`/pipeline`)**: 7 bosqichli vizual oqim, fon vazifalari navbati (Jobs queue), qayta urinish va bekor qilish, avto-pauza nazorati.
+- **FFmpeg Render Worker (`@autochannel/core`)**: 1080x1920 9:16 H.264/AAC, dinamik ASS subtitrlar, brend suvo'lchami (watermark), LUFS -14 audio normalizatsiyasi, 1s muqova JPEG, Vercel Blob / local saqlash va `.github/workflows/worker.yml`.
+- **Meta / Instagram Integratsiyasi (`@autochannel/integrations`)**: Instagram Graph API Reels container yaratish, status polling, media_publish (idempotent, kuniga 25 limit).
+- **Telegram Bot Integratsiyasi (`@autochannel/integrations`)**: Video tayyor, joylandi, avto-pauza va tizim xatolari haqida tezkor bildirishnomalar.
+- **Onboarding (`/onboarding`)**: 5 bosqichli qadamma-qadam sozlash ustasi (Kalitlar -> Nisha -> Brend -> Instagram -> Avto-rejim).
+- **Statistika va Tahlil (`/analytics`)**: 7 kunlik ko'rishlar, reach, saqlashlar grafigi, eng yaxshi Reels reytingi va AI teskari aloqasi (feedback loop).
+- **Navbat va Loglar (`/logs`)**: Tizim audit loglari, Jobs navbati, xatoliklar tafsiloti va API xarajatlari nazorati.
+- **Admin Xavfsizligi (`/login`, `proxy.ts`)**: Web Crypto HMAC-SHA256 xavfsiz HTTP-only sessiya va `ADMIN_PASSWORD` himoyasi.
 - **Cron API**: Vercel Cron #1 (`/api/cron/produce`) va Cron #2 (`/api/cron/publish`) marshrutlari (idempotent, avto-pauza).
-
-Keyingi bosqichlar (TZ 10-bo'lim):
-
-1. FFmpeg / Remotion video montaj renderi (GitHub Actions worker)
-2. Meta OAuth ulanishi va Instagram Graph API Reels joylash konteyneri
-3. Telegram bot bildirishnomalari (avto-pauza va kunlik hisobot)
-4. Instagram Insights analytics yig'uvchi va haftalik hisobot
 
 ## Xavfsizlik
 
-- API kalitlar DB'da AES-256-GCM bilan shifrlanadi, brauzerga faqat oxirgi 4 belgi
-  qaytadi, loglarga yozilmaydi.
+- API kalitlar DB'da AES-256-GCM bilan shifrlanadi, brauzerga faqat oxirgi 4 belgi qaytadi, loglarga yozilmaydi.
 - `.env`, `.env.local` va `.dev/` hech qachon repoga tushmaydi.
+- Admin panel va API marshrutlari `ADMIN_PASSWORD` + HMAC HTTP-only sessiya orqali himoyalangan (`proxy.ts`).
+- Cron marshrutlari `CRON_SECRET` Bearer token bilan himoyalangan.
 - Worker kalit shifrini `ENCRYPTION_KEY` (GitHub Actions secret) bilan ochadi.
-
-> **Diqqat:** Auth.js hali ulanmagan (TZ 4.8). Panelni ochiq internetga
-> joylashtirmang — `/settings` va `/api/credentials` hozircha autentifikatsiyasiz.
-> Deploy qilishdan oldin Auth.js v5 + Admin roli qo'shilishi shart.
 
 ## Skriptlar
 
