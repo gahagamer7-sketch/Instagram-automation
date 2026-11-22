@@ -2,7 +2,7 @@
 // Ishga tushirish: GEMINI_API_KEY=<kalit> pnpm exec tsx spikes/adapter-test.ts
 
 import { writeFileSync, mkdirSync } from "node:fs";
-import { createProvider } from "../packages/ai/src/index.js";
+import { createProvider } from "../packages/ai/src/index";
 
 const key = process.env.GEMINI_API_KEY;
 if (!key) {

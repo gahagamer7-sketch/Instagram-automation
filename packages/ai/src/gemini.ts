@@ -5,8 +5,8 @@ import {
   SpeechResult,
   TextOptions,
   TextResult,
-} from "./types.js";
-import { pcmToWav, parseSampleRate } from "./wav.js";
+} from "./types";
+import { pcmToWav, parseSampleRate } from "./wav";
 
 const BASE = "https://generativelanguage.googleapis.com/v1beta";
 

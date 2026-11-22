@@ -9,9 +9,14 @@
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @autochannel/db generate",
     "db:migrate": "pnpm --filter @autochannel/db migrate",
-    "db:studio": "pnpm --filter @autochannel/db studio"
+    "db:deploy": "pnpm --filter @autochannel/db deploy",
+    "db:studio": "pnpm --filter @autochannel/db studio",
+    "db:dev": "node scripts/dev-db.mjs",
+    "db:seed": "node --env-file=packages/db/.env packages/db/scripts/seed.mjs"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.17",
+    "@electric-sql/pglite-socket": "^0.2.20",
     "turbo": "^2.5.0",
     "typescript": "^5.7.0"
   }

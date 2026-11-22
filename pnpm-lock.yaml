@@ -175,6 +175,12 @@ importers:
 
   .:
     devDependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.5.17
+        version: 0.5.17
+      '@electric-sql/pglite-socket':
+        specifier: ^0.2.20
+        version: 0.2.20(@electric-sql/pglite-age@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_hashids@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_ivm@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_textsearch@0.0.19(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_uuidv7@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pgtap@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pgvector@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite@0.5.17)
       turbo:
         specifier: ^2.5.0
         version: 2.11.13
@@ -184,6 +190,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@autochannel/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
+      '@autochannel/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
+      '@autochannel/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      lucide-react:
+        specifier: ^1.77.0
+        version: 1.77.0(@types/react@19.3.0)(react@19.3.0)
       next:
         specifier: 16.4.6
         version: 16.4.6(@babel/core@7.29.13(supports-color@7.2.0))(@types/node@20.19.43)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -237,6 +255,9 @@ importers:
         specifier: workspace:*
         version: link:../db
     devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.5
       tsx:
         specifier: ^4.19.0
         version: 4.23.15
@@ -246,6 +267,9 @@ importers:
 
   packages/crypto:
     devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.5
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
@@ -256,6 +280,9 @@ importers:
         specifier: ^6.5.0
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
     devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.5
       prisma:
         specifier: ^6.5.0
         version: 6.19.3(typescript@5.9.3)
@@ -335,6 +362,57 @@ packages:
   '@babel/types@7.29.15':
     resolution: {integrity: sha512-/XKpKDakL//LZ66bq1XsZOswuqeI5MZqPLDu18o3XdkU1fNJ7bdPtzgnc4ZNS+bBGHV0FJG8jjb8SwcC3nNVQQ==}
     engines: {node: '>=6.9.0'}
+
+  '@electric-sql/pglite-age@0.0.18':
+    resolution: {integrity: sha512-JVuUqMEmF3Kb2MUETJ0X7uRxfmeIA5+tYMrYrckDzpFdhx4JptbIdJ5RyVV3E+z+ok+A81tf/fgiBNzdrQE3Mg==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_hashids@0.0.18':
+    resolution: {integrity: sha512-yFDB0tS1SxGd4dETU+DXbJx38PsSDyVOQBUJd8RajSPrv/HpUnplj/4w9MCGmT/gkI/UAEvVILLpkfnQGhQoUQ==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_ivm@0.0.18':
+    resolution: {integrity: sha512-wrSd3jLfvF3ST1BTHAPSwesYE3SwHnyqgdWwMH7NJpp1UpYFwcJLcwTTf9CcvUjn0HGsf7ousp+p7TgZWzwMVg==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_textsearch@0.0.19':
+    resolution: {integrity: sha512-4P3+iJQOf/yoWrjOLCveuMT9u/Je9b4tNdyY+OTIyS2CQaIesMfVjgTkxbMJWmZA0PooyCSj4L6VjZsc5nk6Bg==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_uuidv7@0.0.18':
+    resolution: {integrity: sha512-HIMMW1VKQmSWS+cVkIoo0uHKsN704iDfGldfRkrmUUeqhD8nE6OA0SZhH3g8c80oz1vQT9dI/UT1WSox18Mf1A==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pgtap@0.0.18':
+    resolution: {integrity: sha512-EG3chLw5hlzhdd2+lpoq0Voa1DVVUnSenXCrIiZVpOxHJ6LF9vUlxcu43j4RAkPxQBSIUaXlmbSLQJl6+hXQTw==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pgvector@0.0.18':
+    resolution: {integrity: sha512-G2d2rFS/rsRTXl7fvTuVIhD/fA6MIdDQB3l/xzIyRcDIVUl4KAcAEcqXPPTAXwJlqLViNGHFX+d1yn63V91xpQ==}
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-socket@0.2.20':
+    resolution: {integrity: sha512-ES5Zf3oZLUHJkeKabfNWlhG6BLYZOu0iHXt7eGgwMp+aTsymSY4aoU3v4SGDaKV1j0YlgORrPSHHvOzv1iH5yw==}
+    hasBin: true
+    peerDependencies:
+      '@electric-sql/pglite': 0.5.17
+      '@electric-sql/pglite-age': 0.0.18
+      '@electric-sql/pglite-pg_hashids': 0.0.18
+      '@electric-sql/pglite-pg_ivm': 0.0.18
+      '@electric-sql/pglite-pg_textsearch': 0.0.19
+      '@electric-sql/pglite-pg_uuidv7': 0.0.18
+      '@electric-sql/pglite-pgtap': 0.0.18
+      '@electric-sql/pglite-pgvector': 0.0.18
+
+  '@electric-sql/pglite@0.5.17':
+    resolution: {integrity: sha512-8SvKjiUjaU+0O0dbxjOfN+jXz14TEqDWbwDkYOW1aQ11y/ph2JvFVI27ABBo5nfw+ZfSqy4hKCNlbnbB1TDE+g==}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -2043,6 +2121,15 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
+  lucide-react@1.77.0:
+    resolution: {integrity: sha512-VS6sOi8ZUH1qm6swBL/tpI4xAhB6pFTdHvw3pfCJD+DaTJwpyynVzfOS6mdyMZ+OCdY/GMSQbqinOMOPbNSrQA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -2655,6 +2742,47 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.15
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@electric-sql/pglite-age@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_hashids@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_ivm@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_textsearch@0.0.19(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pg_uuidv7@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pgtap@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-pgvector@0.0.18(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+
+  '@electric-sql/pglite-socket@0.2.20(@electric-sql/pglite-age@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_hashids@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_ivm@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_textsearch@0.0.19(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pg_uuidv7@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pgtap@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite-pgvector@0.0.18(@electric-sql/pglite@0.5.17))(@electric-sql/pglite@0.5.17)':
+    dependencies:
+      '@electric-sql/pglite': 0.5.17
+      '@electric-sql/pglite-age': 0.0.18(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pg_hashids': 0.0.18(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pg_ivm': 0.0.18(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pg_textsearch': 0.0.19(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pg_uuidv7': 0.0.18(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pgtap': 0.0.18(@electric-sql/pglite@0.5.17)
+      '@electric-sql/pglite-pgvector': 0.0.18(@electric-sql/pglite@0.5.17)
+
+  '@electric-sql/pglite@0.5.17': {}
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -4339,6 +4467,12 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-react@1.77.0(@types/react@19.3.0)(react@19.3.0):
+    dependencies:
+      react: 19.3.0
+    optionalDependencies:
+      '@types/react': 19.3.0
 
   magic-string@0.30.21:
     dependencies:

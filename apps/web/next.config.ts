@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Workspace paketlari TypeScript manba sifatida eksport qilinadi —
+  // Next ularni o'zi transpile qilishi kerak.
+  transpilePackages: [
+    "@autochannel/ai",
+    "@autochannel/core",
+    "@autochannel/crypto",
+    "@autochannel/db",
+  ],
+  // Prisma'ning query engine'i Node.js runtime'da tashqarida qolsin.
+  serverExternalPackages: ["@prisma/client", ".prisma/client"],
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
