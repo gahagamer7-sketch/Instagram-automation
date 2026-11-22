@@ -23,3 +23,5 @@ spikes/out/
 
 prisma/*.db
 .dev/
+.vercel
+.env*

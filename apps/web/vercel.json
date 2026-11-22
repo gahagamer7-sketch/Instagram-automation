@@ -1,12 +1,14 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @autochannel/db generate && next build",
   "crons": [
     {
       "path": "/api/cron/produce",
-      "schedule": "0 1 * * *"
+      "schedule": "0 10 * * *"
     },
     {
       "path": "/api/cron/publish",
-      "schedule": "0 * * * *"
+      "schedule": "0 14 * * *"
     }
   ]
 }
