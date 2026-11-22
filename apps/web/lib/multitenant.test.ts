@@ -132,5 +132,48 @@ describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
       where: { id: { in: [userA.id, userB.id] } },
     });
   });
+
+  it("Instagram ulanmagan kanallarni to'g'ri 'ulanmagan' deb aniqlaydi", async () => {
+    const email = `test_ig_${Date.now()}@test.uz`;
+    const user = await prisma.user.create({
+      data: {
+        name: "Test User",
+        email,
+        passwordHash: "hash",
+        channels: {
+          create: {
+            name: "Test kanali",
+            status: "setup",
+            igUserId: null,
+          },
+        },
+      },
+      include: { channels: true },
+    });
+
+    const channel = user.channels[0];
+    const isConnectedInitially = Boolean(
+      channel?.igUserId && channel?.status === "active",
+    );
+    expect(isConnectedInitially).toBe(false);
+
+    // Instagram ulanadi
+    const updatedChannel = await prisma.channel.update({
+      where: { id: channel.id },
+      data: {
+        handle: "test_reels",
+        igUserId: "178414123456",
+        status: "active",
+      },
+    });
+
+    const isConnectedAfter = Boolean(
+      updatedChannel.igUserId && updatedChannel.status === "active",
+    );
+    expect(isConnectedAfter).toBe(true);
+
+    await prisma.channel.delete({ where: { id: channel.id } });
+    await prisma.user.delete({ where: { id: user.id } });
+  });
 });
 

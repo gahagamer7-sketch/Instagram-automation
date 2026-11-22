@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@autochannel/db";
 import { encrypt } from "@autochannel/crypto";
 import { InstagramGraphProvider } from "@autochannel/integrations";
+import { getCurrentSession } from "@/lib/session";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -81,12 +82,16 @@ export async function GET(request: NextRequest) {
     const encryptedToken = encrypt(longLived.accessToken, encKey);
     const expiresAt = new Date(Date.now() + longLived.expiresIn * 1000);
 
-    // 4. DB'ga saqlash
+    // 4. DB'ga saqlash (foydalanuvchining shaxsiy kanaliga bog'laymiz)
+    const session = await getCurrentSession();
+    const channelWhere = session ? { userId: session.userId } : {};
+
     await prisma.$transaction(async (tx) => {
-      let channel = await tx.channel.findFirst();
+      let channel = await tx.channel.findFirst({ where: channelWhere });
       if (!channel) {
         channel = await tx.channel.create({
           data: {
+            userId: session?.userId,
             name: account.igUsername,
             handle: account.igUsername,
             igUserId: account.igUserId,

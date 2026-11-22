@@ -180,7 +180,13 @@ async function StatsGrid() {
 }
 
 async function SetupChecklist() {
-  const snapshot = await getSystemSnapshot();
+  const currentUser = await getCurrentUser();
+  const channel = currentUser?.channel;
+  const isInstagramConnected = Boolean(
+    channel?.igUserId && channel?.status === "active",
+  );
+
+  const snapshot = await getSystemSnapshot(currentUser?.user?.id);
 
   if (!snapshot.ok) {
     return (
@@ -201,7 +207,7 @@ async function SetupChecklist() {
     },
     {
       label: "Instagram Business akkaunt ulangan",
-      done: snapshot.hasChannel,
+      done: isInstagramConnected,
       href: "/onboarding?step=4",
     },
     {
