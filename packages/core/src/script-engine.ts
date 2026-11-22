@@ -239,3 +239,4 @@ export async function generateReelsScript(
 
   return parseScriptResponse(result.text, input.topic);
 }
+

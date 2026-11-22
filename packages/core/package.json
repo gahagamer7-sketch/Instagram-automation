@@ -10,8 +10,9 @@
   },
   "dependencies": {
     "@autochannel/ai": "workspace:*",
+    "@autochannel/crypto": "workspace:*",
     "@autochannel/db": "workspace:*",
-    "@autochannel/crypto": "workspace:*"
+    "@vercel/blob": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

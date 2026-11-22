@@ -147,3 +147,4 @@ export function validateScriptQa(script: ReelsScript): QaResult {
     violations,
   };
 }
+

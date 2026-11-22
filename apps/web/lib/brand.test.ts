@@ -85,3 +85,4 @@ describe("buildBrandPrompt", () => {
     expect(prompt).toContain("nameOptions");
   });
 });
+
