@@ -69,10 +69,10 @@ export default function LandingPage() {
               Kirish
             </Link>
             <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 rounded-xl font-semibold transition px-4 py-2 text-xs gradient-brand text-white shadow-[0_4px_16px_rgba(37,99,235,0.3)] hover:brightness-110"
+              href="/register"
+              className="inline-flex items-center gap-1.5 rounded-xl font-semibold transition px-4 py-2 text-xs gradient-brand text-white shadow-[0_4px_16px_rgba(37,99,235,0.3)] hover:brightness-110"
             >
-              <span>Boshqaruv paneli</span>
+              <span>Ro&apos;yxatdan o&apos;tish</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -470,10 +470,10 @@ export default function LandingPage() {
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/dashboard"
+              href="/register"
               className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition px-6 py-3.5 text-sm gradient-brand text-white shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:brightness-110"
             >
-              <span>Boshqaruv paneliga o&apos;tish</span>
+              <span>Bepul hisob ochish</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
 
@@ -481,7 +481,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition px-5 py-3.5 text-sm border border-border bg-surface-2 text-text hover:border-primary/50 hover:text-primary"
             >
-              <span>Admin sifatida kirish</span>
+              <span>Tizimga kirish</span>
             </Link>
           </div>
         </div>

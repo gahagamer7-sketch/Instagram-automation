@@ -3,11 +3,31 @@ import Link from "next/link";
 import { ArrowRight, CircleCheck, Rocket, ShieldCheck } from "lucide-react";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
-import { Card, CardHeader, PageHeader } from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { CardSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { getDashboardData } from "@/lib/dashboard";
 import { formatDateTime, formatNumber, formatUsd } from "@/lib/format";
 import { getSystemSnapshot } from "@/lib/system";
+import { getCurrentUser } from "@/lib/session";
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export const metadata = {
   title: "Dashboard — AutoChannel",
@@ -16,16 +36,16 @@ export const metadata = {
 export default function DashboardPage() {
   return (
     <>
-      <PageHeader
-        title="Boshqaruv paneli"
-        description="Kanal holati, bugungi ishlab chiqarish va keyingi Reels. Barcha bosqichlar to'liq avtomatik ishlaydi."
-        action={
-          <Link href="/onboarding" className={buttonClass("gradient", "md")}>
-            <Rocket className="h-4 w-4" aria-hidden />
-            Ishga tushirish (Onboarding)
-          </Link>
+      <Suspense
+        fallback={
+          <div className="mb-6 flex flex-col gap-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </div>
         }
-      />
+      >
+        <DashboardHeader />
+      </Suspense>
 
       <Suspense
         fallback={
@@ -56,8 +76,59 @@ export default function DashboardPage() {
   );
 }
 
+async function DashboardHeader() {
+  const currentUser = await getCurrentUser();
+  const user = currentUser?.user;
+  const channel = currentUser?.channel;
+
+  return (
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-text">
+            Boshqaruv paneli
+          </h1>
+          {user && (
+            <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+              {user.role === "admin" ? "Admin" : (user.name || user.email)}
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-muted">
+          {channel
+            ? `${channel.name} (${channel.handle ? `@${channel.handle}` : "Instagram"}) uchun shaxsiy tahlil va navbat`
+            : "Reels avtomatlashtirish shaxsiy boshqaruv paneli"}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        {channel?.handle ? (
+          <div className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-text">
+            <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
+            <span className="font-medium">@{channel.handle}</span>
+          </div>
+        ) : (
+          <Link
+            href="/onboarding?step=4"
+            className="flex items-center gap-1.5 rounded-xl border border-pink-500/30 bg-pink-500/10 px-3 py-1.5 text-xs font-medium text-pink-500 hover:bg-pink-500/20 transition"
+          >
+            <InstagramIcon className="h-3.5 w-3.5" />
+            <span>Instagram ulash</span>
+          </Link>
+        )}
+
+        <Link href="/onboarding" className={buttonClass("gradient", "sm")}>
+          <Rocket className="h-4 w-4" aria-hidden />
+          Onboarding
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 async function StatsGrid() {
-  const result = await getDashboardData();
+  const currentUser = await getCurrentUser();
+  const result = await getDashboardData(currentUser?.channel?.id);
 
   if (!result.ok) {
     return (
@@ -242,7 +313,8 @@ function PipelineCard() {
 }
 
 async function QueueCard() {
-  const result = await getDashboardData();
+  const currentUser = await getCurrentUser();
+  const result = await getDashboardData(currentUser?.channel?.id);
 
   if (!result.ok) {
     return (
@@ -285,4 +357,3 @@ async function QueueCard() {
     </Card>
   );
 }
-

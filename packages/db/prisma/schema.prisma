@@ -9,8 +9,28 @@ datasource db {
 
 // ============ Kanallar va auth ============
 
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         UserRole  @default(user)
+  channels     Channel[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("users")
+}
+
+enum UserRole {
+  user
+  admin
+}
+
 model Channel {
   id         String        @id @default(cuid())
+  userId     String?
+  user       User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
   platform   String        @default("instagram")
   name       String
   handle     String?
@@ -27,6 +47,7 @@ model Channel {
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 
+  @@index([userId])
   @@map("channels")
 }
 

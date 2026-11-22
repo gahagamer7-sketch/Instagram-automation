@@ -12,7 +12,7 @@ interface AppShellProps {
 
 export function AppShell({ children, sidebar, topbar, mobileNav }: AppShellProps) {
   const pathname = usePathname();
-  const isPublicPage = pathname === "/" || pathname === "/login";
+  const isPublicPage = pathname === "/" || pathname === "/login" || pathname === "/register";
 
   if (isPublicPage) {
     return (

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SystemStatus } from "./system-status";
+import { UserBadge } from "./user-profile";
 
 export function Topbar() {
   return (
@@ -19,16 +20,22 @@ export function Topbar() {
           Avtomatik Reels kanali — boshqaruv paneli
         </p>
 
-        <Suspense
-          fallback={
-            <div className="flex items-center gap-2" aria-busy>
-              <Skeleton className="h-8 w-32 rounded-full" />
-              <Skeleton className="h-9 w-28" />
-            </div>
-          }
-        >
-          <SystemStatus />
-        </Suspense>
+        <div className="flex items-center gap-3">
+          <Suspense
+            fallback={
+              <div className="flex items-center gap-2" aria-busy>
+                <Skeleton className="h-8 w-32 rounded-full" />
+                <Skeleton className="h-9 w-28" />
+              </div>
+            }
+          >
+            <SystemStatus />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <UserBadge />
+          </Suspense>
+        </div>
       </div>
     </header>
   );

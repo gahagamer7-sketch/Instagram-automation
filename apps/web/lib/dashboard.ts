@@ -11,6 +11,7 @@ export interface DashboardData {
   nextScheduledAt: string | null;
   plays7d: number;
   followers: number;
+  channelName?: string;
 }
 
 export type DashboardResult =
@@ -25,14 +26,35 @@ function startOfTodayTashkent(now: Date): Date {
   return new Date(local.getTime() - offsetMs);
 }
 
-async function loadDashboardData(): Promise<DashboardResult> {
+export async function loadDashboardData(
+  channelId?: string | null,
+): Promise<DashboardResult> {
   // `new Date()` va baza o'qishi faqat so'rov vaqtida bo'lishi kerak.
   await connection();
   const now = new Date();
 
+  // Agar foydalanuvchida hali kanal bo'lmasa, dastlabki nol holatni qaytaramiz
+  if (channelId === null) {
+    return {
+      ok: true,
+      data: {
+        pendingVideos: 0,
+        readyVideos: 0,
+        publishedVideos: 0,
+        failedVideos: 0,
+        todayCostUsd: 0,
+        nextScheduledAt: null,
+        plays7d: 0,
+        followers: 0,
+      },
+    };
+  }
+
   try {
     const since = startOfTodayTashkent(now);
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const videoWhere = channelId ? { channelId } : {};
 
     const [
       pendingVideos,
@@ -45,25 +67,55 @@ async function loadDashboardData(): Promise<DashboardResult> {
       followersSum,
     ] = await Promise.all([
       prisma.video.count({
-        where: { status: { in: ["idea", "script", "voice", "render", "qa"] } },
+        where: {
+          ...videoWhere,
+          status: { in: ["idea", "script", "voice", "render", "qa"] },
+        },
       }),
-      prisma.video.count({ where: { status: { in: ["ready", "publishing"] } } }),
-      prisma.video.count({ where: { status: "published" } }),
-      prisma.video.count({ where: { status: "failed" } }),
+      prisma.video.count({
+        where: {
+          ...videoWhere,
+          status: { in: ["ready", "publishing"] },
+        },
+      }),
+      prisma.video.count({
+        where: {
+          ...videoWhere,
+          status: "published",
+        },
+      }),
+      prisma.video.count({
+        where: {
+          ...videoWhere,
+          status: "failed",
+        },
+      }),
       prisma.costLog.aggregate({
         _sum: { costUsd: true },
-        where: { createdAt: { gte: since } },
+        where: {
+          createdAt: { gte: since },
+          ...(channelId ? { video: { channelId } } : {}),
+        },
       }),
       prisma.video.findFirst({
-        where: { scheduledFor: { gte: now } },
+        where: {
+          ...videoWhere,
+          scheduledFor: { gte: now },
+        },
         orderBy: { scheduledFor: "asc" },
         select: { scheduledFor: true },
       }),
       prisma.analyticsSnapshot.aggregate({
         _sum: { plays: true },
-        where: { date: { gte: weekAgo } },
+        where: {
+          date: { gte: weekAgo },
+          ...(channelId ? { video: { channelId } } : {}),
+        },
       }),
-      prisma.analyticsSnapshot.aggregate({ _sum: { followersGained: true } }),
+      prisma.analyticsSnapshot.aggregate({
+        _sum: { followersGained: true },
+        where: channelId ? { video: { channelId } } : {},
+      }),
     ]);
 
     return {

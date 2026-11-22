@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Suspense } from "react";
 import "./globals.css";
 import { AppShell } from "@/components/shell/app-shell";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { MobileNav } from "@/components/shell/mobile-nav";
+import { SidebarUserCard } from "@/components/shell/user-profile";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,7 +24,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="uz" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full">
         <AppShell
-          sidebar={<Sidebar />}
+          sidebar={
+            <Sidebar
+              userSlot={
+                <Suspense fallback={null}>
+                  <SidebarUserCard />
+                </Suspense>
+              }
+            />
+          }
           topbar={<Topbar />}
           mobileNav={<MobileNav />}
         >

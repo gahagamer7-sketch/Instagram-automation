@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Lock,
+  Mail,
   Eye,
   EyeOff,
   Sparkles,
@@ -12,6 +13,7 @@ import {
   ShieldCheck,
   ArrowLeft,
   KeyRound,
+  UserPlus,
 } from "lucide-react";
 import { loginAction } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -24,9 +26,11 @@ export function LoginForm() {
 
   const [state, formAction, isPending] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
+  const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
 
-  const handleQuickFill = () => {
+  const handleAdminAutofill = () => {
+    setEmailValue("admin@autochannel.local");
     setPasswordValue("admin");
   };
 
@@ -36,9 +40,9 @@ export function LoginForm() {
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-indigo-500 shadow-[0_8px_24px_rgba(37,99,235,0.35)] text-white">
           <Sparkles className="h-7 w-7" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">AutoChannel Admin</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text">Tizimga kirish</h1>
         <p className="mt-1.5 text-xs text-muted">
-          Reels avtomatlashtirish boshqaruv paneliga kirish (TZ 4.8)
+          Reels avtomatlashtirish shaxsiy boshqaruv paneliga kirish
         </p>
       </div>
 
@@ -50,24 +54,49 @@ export function LoginForm() {
             <Alert tone="danger">{state.message}</Alert>
           )}
 
+          {/* Elektron pochta */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label
-                htmlFor="password"
+                htmlFor="email"
                 className="block text-xs font-semibold text-text"
               >
-                Admin Paroli
+                Elektron pochta
               </label>
               <button
                 type="button"
-                onClick={handleQuickFill}
+                onClick={handleAdminAutofill}
                 className="text-[11px] text-primary hover:underline flex items-center gap-1"
-                title="Dev parol: admin"
+                title="Admin orqali tezkor kirish"
               >
                 <KeyRound className="h-3 w-3" />
-                <span>admin</span>
+                <span>Admin bilan to&apos;ldirish</span>
               </button>
             </div>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted">
+                <Mail className="h-4 w-4" />
+              </div>
+              <input
+                id="email"
+                name="email"
+                type="text"
+                value={emailValue}
+                onChange={(e) => setEmailValue(e.target.value)}
+                placeholder="aziz@misol.uz yoki admin"
+                className="w-full rounded-xl border border-border bg-surface-2 pl-9 pr-3 py-2.5 text-sm text-text placeholder:text-muted/60 transition focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Parol */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="password"
+              className="block text-xs font-semibold text-text"
+            >
+              Parol
+            </label>
 
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted">
@@ -80,7 +109,6 @@ export function LoginForm() {
                 value={passwordValue}
                 onChange={(e) => setPasswordValue(e.target.value)}
                 required
-                autoFocus
                 placeholder="••••••••••••"
                 className="w-full rounded-xl border border-border bg-surface-2 pl-9 pr-10 py-2.5 text-sm text-text placeholder:text-muted/60 transition focus:border-primary focus:outline-none"
               />
@@ -97,9 +125,6 @@ export function LoginForm() {
                 )}
               </button>
             </div>
-            <p className="text-[11px] text-muted">
-              .env faylidagi ADMIN_PASSWORD kaliti (standart: <code>admin</code>)
-            </p>
           </div>
 
           <Button
@@ -119,7 +144,20 @@ export function LoginForm() {
           </Button>
         </form>
 
-        <div className="mt-5 border-t border-border pt-4 flex items-center justify-between text-[11px] text-muted">
+        <div className="mt-5 border-t border-border pt-4 text-center">
+          <p className="text-xs text-muted">
+            Hisobingiz yo&apos;qmi?{" "}
+            <Link
+              href="/register"
+              className="font-semibold text-primary hover:underline inline-flex items-center gap-1"
+            >
+              <UserPlus className="h-3.5 w-3.5 inline" />
+              Ro&apos;yxatdan o&apos;tish
+            </Link>
+          </p>
+        </div>
+
+        <div className="mt-4 border-t border-border/60 pt-3 flex items-center justify-between text-[11px] text-muted">
           <div className="flex items-center gap-1.5">
             <ShieldCheck className="h-3.5 w-3.5 text-success" />
             <span>Xavfsiz HTTP-only sessiya</span>

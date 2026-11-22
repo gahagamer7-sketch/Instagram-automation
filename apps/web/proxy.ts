@@ -3,42 +3,38 @@ import { SESSION_COOKIE, verifySessionToken } from "./lib/auth";
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const adminPassword = process.env.ADMIN_PASSWORD;
 
-  // Agar ADMIN_PASSWORD o'rnatilmagan bo'lsa (lokal test yoki ochiq dev), ruxsat beriladi
-  if (!adminPassword) {
-    return NextResponse.next();
-  }
-
-  // Ochiq marshrutlar: landing page (/), login, Next.js statik fayllari, cron, OAuth
-  if (
+  // Ochiq marshrutlar: landing page (/), login, register, Next.js statik fayllari, cron, OAuth
+  const isPublicRoute =
     pathname === "/" ||
     pathname === "/login" ||
+    pathname === "/register" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/auth/meta") ||
     pathname === "/favicon.ico" ||
-    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/)
-  ) {
+    pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/);
+
+  const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
+  const session = sessionCookie ? await verifySessionToken(sessionCookie) : null;
+
+  if (session) {
+    // Agar foydalanuvchi tizimga kirgan bo'lsa va login/register ga kelsa, dashboard ga yo'naltiriladi
+    if (pathname === "/login" || pathname === "/register") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
     return NextResponse.next();
   }
 
-  const sessionCookie = request.cookies.get(SESSION_COOKIE)?.value;
-  const isAuthenticated = sessionCookie
-    ? await verifySessionToken(sessionCookie, adminPassword)
-    : false;
-
-  if (isAuthenticated) {
-    if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
+  // Ochiq sahifalar barcha uchun ochiq
+  if (isPublicRoute) {
     return NextResponse.next();
   }
 
   // Himoyalangan API marshrutlari uchun 401
   if (pathname.startsWith("/api/")) {
     return NextResponse.json(
-      { error: "Avtorizatsiyadan o'tilmagan. Iltimos login qiling." },
+      { error: "Avtorizatsiyadan o'tilmagan. Iltimos ro'yxatdan o'ting yoki tizimga kiring." },
       { status: 401 },
     );
   }

@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Sparkles, LogOut } from "lucide-react";
@@ -7,7 +8,11 @@ import { cn } from "@/lib/cn";
 import { NAV_ITEMS, isActive } from "./nav-items";
 import { logoutAction } from "@/app/login/actions";
 
-export function Sidebar() {
+interface SidebarProps {
+  userSlot?: ReactNode;
+}
+
+export function Sidebar({ userSlot }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -48,12 +53,15 @@ export function Sidebar() {
           </ul>
         </nav>
 
-        <div className="border-t border-border px-5 py-4">
-          <div className="flex items-center justify-between text-xs text-muted">
+        <div className="border-t border-border px-4 py-4 space-y-3">
+          {userSlot}
+
+          <div className="flex items-center justify-between text-xs text-muted px-1">
             <span>Bepul tarif rejimi</span>
             <span className="font-mono text-[11px] opacity-75">v0.1 · MVP</span>
           </div>
-          <form action={logoutAction} className="mt-3">
+
+          <form action={logoutAction}>
             <button
               type="submit"
               className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-xs text-muted hover:bg-surface-2 hover:text-danger transition"
