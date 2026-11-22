@@ -144,4 +144,5 @@ export class GoogleTrendsProvider {
 }
 
 export * from "./instagram";
+export * from "./telegram";
 

@@ -58,7 +58,7 @@ export const PROVIDERS: ProviderMeta[] = [
     keyLabel: "Bot token",
     docsUrl: "https://core.telegram.org/bots#botfather",
     docsLabel: "BotFather",
-    testable: false,
+    testable: true,
   },
 ];
 

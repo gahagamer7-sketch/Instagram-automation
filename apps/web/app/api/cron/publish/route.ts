@@ -1,7 +1,29 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@autochannel/db";
 import { decrypt } from "@autochannel/crypto";
-import { InstagramGraphProvider } from "@autochannel/integrations";
+import { InstagramGraphProvider, TelegramProvider } from "@autochannel/integrations";
+
+async function trySendTelegram(
+  action: (tg: TelegramProvider, chatId: string) => Promise<boolean>,
+) {
+  try {
+    const encKey = process.env.ENCRYPTION_KEY;
+    const cred = await prisma.apiCredential.findUnique({ where: { provider: "telegram" } });
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!chatId) return;
+
+    let token = process.env.TELEGRAM_BOT_TOKEN;
+    if (cred && encKey) {
+      token = decrypt(cred.encryptedKey, encKey);
+    }
+    if (token) {
+      const tg = new TelegramProvider(token);
+      await action(tg, chatId);
+    }
+  } catch (err) {
+    console.warn("[telegram] Bildirishnomada xato:", err);
+  }
+}
 
 function authorized(request: Request): boolean {
   const auth = request.headers.get("authorization");
@@ -131,6 +153,13 @@ export async function GET(request: Request) {
 
         publishedResults.push({ id: video.id, status: "published" });
         consecutiveErrors = 0;
+
+        await trySendTelegram((tg, chatId) =>
+          tg.notifyVideoPublished(chatId, {
+            topic: video.caption?.slice(0, 60) || "Reels videosi",
+            igMediaId: mediaId,
+          }),
+        );
       } catch (publishErr) {
         consecutiveErrors++;
         const errMsg = publishErr instanceof Error ? publishErr.message : String(publishErr);
@@ -148,12 +177,17 @@ export async function GET(request: Request) {
 
         // Ketma-ket 2 ta xato bo'lsa -> AVTO-PAUZA (TZ 4.5)
         if (consecutiveErrors >= 2) {
+          const pauseReason = "Ketma-ket 2 ta joylash xatosi yuz bergani uchun avto-pauza yoqildi.";
           await prisma.appSetting.updateMany({
             data: {
               paused: true,
-              pauseReason: "Ketma-ket 2 ta joylash xatosi yuz bergani uchun avto-pauza yoqildi.",
+              pauseReason,
             },
           });
+
+          await trySendTelegram((tg, chatId) =>
+            tg.notifyAutoPaused(chatId, pauseReason),
+          );
           break;
         }
       }
