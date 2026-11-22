@@ -225,6 +225,73 @@ export class InstagramGraphProvider {
   }
 
   /**
+   * Foydalanuvchini Meta OAuth dialogiga yo'naltiruvchi rasmiy URL yaratadi.
+   */
+  static buildOAuthUrl(params: {
+    appId: string;
+    redirectUri: string;
+    state?: string;
+    scopes?: string[];
+  }): string {
+    const scopes = params.scopes ?? [
+      "instagram_basic",
+      "instagram_content_publish",
+      "pages_show_list",
+      "pages_read_engagement",
+    ];
+
+    const search = new URLSearchParams({
+      client_id: params.appId,
+      redirect_uri: params.redirectUri,
+      scope: scopes.join(","),
+      response_type: "code",
+    });
+
+    if (params.state) {
+      search.set("state", params.state);
+    }
+
+    return `https://www.facebook.com/v21.0/dialog/oauth?${search.toString()}`;
+  }
+
+  /**
+   * OAuth 'code' ni qisqa muddatli user access tokenga almashtiradi.
+   */
+  static async exchangeCodeForToken(
+    code: string,
+    appId: string,
+    appSecret: string,
+    redirectUri: string,
+  ): Promise<{ accessToken: string; expiresIn: number }> {
+    const url = `https://graph.facebook.com/v21.0/oauth/access_token?client_id=${encodeURIComponent(
+      appId,
+    )}&client_secret=${encodeURIComponent(
+      appSecret,
+    )}&redirect_uri=${encodeURIComponent(
+      redirectUri,
+    )}&code=${encodeURIComponent(code)}`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    const data = (await res.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      error?: { message: string };
+    };
+
+    if (!res.ok || !data.access_token) {
+      throw new IntegrationError(
+        data.error?.message || `OAuth code almashishda xato (${res.status})`,
+        "meta",
+      );
+    }
+
+    return {
+      accessToken: data.access_token,
+      expiresIn: data.expires_in ?? 3600,
+    };
+  }
+
+  /**
    * Qisqa muddatli tokenni (1 soatlik) 60 kunlik Long-Lived tokenga almashtiradi.
    */
   async exchangeLongLivedToken(

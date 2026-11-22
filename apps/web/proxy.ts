@@ -10,11 +10,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Ochiq marshrutlar: login, Next.js statik fayllari, cron (o'z bearer siri mavjud)
+  // Ochiq marshrutlar: login, Next.js statik fayllari, cron (o'z bearer siri mavjud), OAuth
   if (
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/cron") ||
+    pathname.startsWith("/api/auth/meta") ||
     pathname === "/favicon.ico" ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/)
   ) {
