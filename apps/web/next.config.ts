@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "@autochannel/core",
     "@autochannel/crypto",
     "@autochannel/db",
+    "@autochannel/integrations",
   ],
   // Prisma'ning query engine'i Node.js runtime'da tashqarida qolsin.
   serverExternalPackages: ["@prisma/client", ".prisma/client"],

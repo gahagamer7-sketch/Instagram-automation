@@ -1,17 +1,78 @@
-import { Palette } from "lucide-react";
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/ui/card";
+import { CardSkeleton } from "@/components/ui/skeleton";
+import { prisma } from "@autochannel/db";
+import { BrandStudio } from "@/components/brand/brand-studio";
+import {
+  parseBrandKitResponse,
+  DEFAULT_BRAND_COLORS,
+  generateAvatarSvg,
+  generateCoverSvg,
+  type BrandColors,
+} from "@/lib/brand";
 
-export default function BrandPage() {
+export const metadata = {
+  title: "Brend studiyasi — AutoChannel",
+};
+
+interface BrandPageProps {
+  searchParams: Promise<{ niche?: string }>;
+}
+
+export default function BrandPage({ searchParams }: BrandPageProps) {
   return (
-    <PagePlaceholder
-      icon={Palette}
-      title="Brend studiyasi"
-      description="Nom, bio, avatar va muqova varianti — bir marta yuklab olib akkauntga qo'yiladi."
-      planned={[
-        "10 nom varianti va bio generatori (150 belgigacha)",
-        "avatar (1080x1080) va muqova (1080x1920) shablonlari",
-        "Brand Kit: palitra, shrift, intro/outro",
-      ]}
+    <>
+      <PageHeader
+        title="Brend studiyasi"
+        description="Nom, bio, avatar va muqova varianti — bir marta tayyorlanib akkauntga qo'yiladi (TZ 4.1)."
+      />
+
+      <Suspense fallback={<CardSkeleton lines={6} />}>
+        <BrandContent searchParams={searchParams} />
+      </Suspense>
+    </>
+  );
+}
+
+async function BrandContent({ searchParams }: BrandPageProps) {
+  const params = await searchParams;
+  const channel = await prisma.channel.findFirst({
+    include: { brandKit: true },
+  });
+
+  const activeNiche = params.niche || channel?.niche || "Foydali Odatlar";
+
+  let initialBrand;
+  if (channel?.brandKit) {
+    const bk = channel.brandKit;
+    const colors = ((bk.colors as unknown) as BrandColors) || DEFAULT_BRAND_COLORS;
+    const chosenName = bk.chosenName || channel.name;
+    const slogan = bk.slogan || "Har kuni yangi bilim";
+    initialBrand = {
+      nameOptions: Array.isArray(bk.nameOptions)
+        ? (bk.nameOptions as string[])
+        : [chosenName],
+      chosenName,
+      slogan,
+      bio: bk.bio || "",
+      keywords: bk.keywords || [],
+      colors,
+      font: bk.font || "Inter",
+      voiceId: bk.voiceId || "gemini-uz-natural-male",
+      avatars: bk.avatarUrl
+        ? [bk.avatarUrl, ...[2, 3, 4].map((v) => generateAvatarSvg(v, chosenName, colors))]
+        : [1, 2, 3, 4].map((v) => generateAvatarSvg(v, chosenName, colors)),
+      coverTemplate: bk.coverTemplateUrl || generateCoverSvg(chosenName, slogan, colors),
+    };
+  } else {
+    initialBrand = parseBrandKitResponse("", activeNiche);
+  }
+
+  return (
+    <BrandStudio
+      initialBrand={initialBrand}
+      activeNiche={activeNiche}
+      hasChannel={Boolean(channel)}
     />
   );
 }

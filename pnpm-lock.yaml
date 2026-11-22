@@ -196,12 +196,18 @@ importers:
       '@autochannel/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@autochannel/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@autochannel/crypto':
         specifier: workspace:*
         version: link:../../packages/crypto
       '@autochannel/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@autochannel/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
       lucide-react:
         specifier: ^1.77.0
         version: 1.77.0(@types/react@19.3.0)(react@19.3.0)
@@ -251,6 +257,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@autochannel/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@autochannel/crypto':
         specifier: workspace:*
         version: link:../crypto
@@ -289,6 +298,15 @@ importers:
       prisma:
         specifier: ^6.5.0
         version: 6.19.3(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/integrations:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.5
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

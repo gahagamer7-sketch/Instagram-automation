@@ -1,17 +1,57 @@
-import { Compass } from "lucide-react";
-import { PagePlaceholder } from "@/components/ui/page-placeholder";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/ui/card";
+import { CardSkeleton } from "@/components/ui/skeleton";
+import { DiscoverForm } from "@/components/niche/discover-form";
+import { prisma } from "@autochannel/db";
+
+export const metadata = {
+  title: "Nisha tahlili — AutoChannel",
+};
 
 export default function NichePage() {
   return (
-    <PagePlaceholder
-      icon={Compass}
-      title="Nisha tahlili"
-      description="15–20 nomzod nisha, 5 mezonli ballash va 14 kunlik sinov natijalari."
-      planned={[
-        "Google Trends (UZ) va YouTube mostPopular signallarini yig'ish",
-        "LLM bilan nomzodlar va 5 mezonli ballash",
-        "14 kunlik sinov jadvali va g'olibni aniqlash",
-      ]}
+    <>
+      <PageHeader
+        title="Nisha tahlili"
+        description="Signal manbalardan nomzodlarni yig'adi, 5-mezonli ballaydi va g'olibni tanlaydi (TZ 4.0)."
+      />
+
+      <Suspense fallback={<CardSkeleton lines={6} />}>
+        <NicheContent />
+      </Suspense>
+    </>
+  );
+}
+
+async function NicheContent() {
+  const [candidates, channel] = await Promise.all([
+    prisma.nicheCandidate.findMany({
+      orderBy: { scoreTotal: "desc" },
+      take: 20,
+    }),
+    prisma.channel.findFirst({ select: { niche: true } }),
+  ]);
+
+  const initialCandidates = candidates.map((c) => ({
+    id: c.id,
+    niche: c.niche,
+    source: ((c.signals as Record<string, unknown>)?.source as string) || "llm",
+    status: c.status,
+    scores: {
+      demand: c.scoreDemand,
+      competition: c.scoreCompetition,
+      automation: c.scoreAutomation,
+      monetization: c.scoreMonetization,
+      contentReserve: c.scoreContentReserve,
+      total: c.scoreTotal,
+    },
+    signals: (c.signals as Record<string, unknown>) ?? {},
+  }));
+
+  return (
+    <DiscoverForm
+      initialCandidates={initialCandidates}
+      currentNiche={channel?.niche ?? null}
     />
   );
 }

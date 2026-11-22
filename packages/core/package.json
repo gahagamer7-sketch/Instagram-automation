@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@autochannel/ai": "workspace:*",
     "@autochannel/db": "workspace:*",
     "@autochannel/crypto": "workspace:*"
   },

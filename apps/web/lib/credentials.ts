@@ -1,6 +1,7 @@
 import { prisma } from "@autochannel/db";
 import { encrypt, decrypt, last4 } from "@autochannel/crypto";
 import { createProvider, type AiProvider } from "@autochannel/ai";
+import { YouTubeProvider } from "@autochannel/integrations";
 
 function getEncryptionKey(): string {
   const key = process.env.ENCRYPTION_KEY;
@@ -89,6 +90,9 @@ export async function testCredential(id: string): Promise<{
   if (row.provider === "gemini") {
     const provider = createProvider("gemini", decrypt(row.encryptedKey, encKey));
     result = await provider.checkConnection();
+  } else if (row.provider === "youtube") {
+    const yt = new YouTubeProvider(decrypt(row.encryptedKey, encKey));
+    result = await yt.checkConnection();
   } else {
     result = { ok: false, message: `"${row.provider}" provayderi testi hali qo'shilmagan` };
   }
