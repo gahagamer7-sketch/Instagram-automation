@@ -4,6 +4,91 @@ import { encrypt } from "@autochannel/crypto";
 import { InstagramGraphProvider } from "@autochannel/integrations";
 import { getCurrentSession } from "@/lib/session";
 
+function renderPopupResult(data: {
+  ok: boolean;
+  handle?: string;
+  igUserId?: string;
+  error?: string;
+  from?: string;
+}) {
+  const fallbackUrl = (data.from || "/onboarding?step=4") +
+    (data.from?.includes("?") ? "&" : "?") +
+    (data.ok
+      ? `meta_success=1&handle=${encodeURIComponent(data.handle || "")}`
+      : `meta_error=${encodeURIComponent(data.error || "Ulanishda xatolik yuz berdi")}`);
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="uz">
+      <head>
+        <meta charset="utf-8" />
+        <title>Meta Ulanishi</title>
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: #0f172a;
+            color: #f8fafc;
+          }
+          .card {
+            text-align: center;
+            padding: 30px;
+            border-radius: 16px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            max-width: 400px;
+          }
+          .title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+          .desc { font-size: 13px; color: #94a3b8; }
+          .spinner {
+            margin: 20px auto;
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+          }
+          @keyframes spin { to { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="spinner"></div>
+          <div class="title">${data.ok ? "Akkaunt ulandi!" : "Xatolik yuz berdi"}</div>
+          <div class="desc">${data.ok ? "Oyna yopilmoqda..." : (data.error || "Iltimos, kuting...")}</div>
+        </div>
+        <script>
+          const payload = ${JSON.stringify(data)};
+          try {
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({
+                type: payload.ok ? 'INSTAGRAM_CONNECTED' : 'INSTAGRAM_ERROR',
+                handle: payload.handle,
+                igUserId: payload.igUserId,
+                error: payload.error
+              }, '*');
+              setTimeout(() => window.close(), 600);
+            } else {
+              window.location.href = ${JSON.stringify(fallbackUrl)};
+            }
+          } catch (e) {
+            window.location.href = ${JSON.stringify(fallbackUrl)};
+          }
+        </script>
+      </body>
+    </html>
+  `;
+
+  return new NextResponse(html, {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
@@ -14,27 +99,34 @@ export async function GET(request: NextRequest) {
   const cookieState = request.cookies.get("meta_oauth_state")?.value;
 
   let from = "/onboarding?step=4";
+  let isPopup = false;
   try {
     if (state) {
       const decoded = JSON.parse(
         Buffer.from(state, "base64url").toString("utf8"),
       );
       if (decoded.from) from = decoded.from;
+      if (decoded.popup) isPopup = Boolean(decoded.popup);
     }
   } catch {}
 
   const redirectUrl = new URL(from, request.url);
 
   if (error || !code) {
-    redirectUrl.searchParams.set(
-      "meta_error",
-      errorDescription || error || "Kirish bekor qilindi",
-    );
+    const errorMsg = errorDescription || error || "Kirish bekor qilindi";
+    if (isPopup) {
+      return renderPopupResult({ ok: false, error: errorMsg, from });
+    }
+    redirectUrl.searchParams.set("meta_error", errorMsg);
     return NextResponse.redirect(redirectUrl);
   }
 
   if (!cookieState || cookieState !== state) {
-    redirectUrl.searchParams.set("meta_error", "CSRF holati mos kelmadi");
+    const errorMsg = "CSRF holati mos kelmadi";
+    if (isPopup) {
+      return renderPopupResult({ ok: false, error: errorMsg, from });
+    }
+    redirectUrl.searchParams.set("meta_error", errorMsg);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -43,10 +135,11 @@ export async function GET(request: NextRequest) {
   const encKey = process.env.ENCRYPTION_KEY;
 
   if (!appId || !appSecret || !encKey) {
-    redirectUrl.searchParams.set(
-      "meta_error",
-      "Serverda META kalitlari sozlanmagan",
-    );
+    const errorMsg = "Serverda META kalitlari sozlanmagan";
+    if (isPopup) {
+      return renderPopupResult({ ok: false, error: errorMsg, from });
+    }
+    redirectUrl.searchParams.set("meta_error", errorMsg);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -166,6 +259,17 @@ export async function GET(request: NextRequest) {
       });
     });
 
+    if (isPopup) {
+      const response = renderPopupResult({
+        ok: true,
+        handle: account.igUsername,
+        igUserId: account.igUserId,
+        from,
+      });
+      response.cookies.delete("meta_oauth_state");
+      return response;
+    }
+
     redirectUrl.searchParams.set("meta_success", "1");
     redirectUrl.searchParams.set("handle", account.igUsername);
 
@@ -174,6 +278,9 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
+    if (isPopup) {
+      return renderPopupResult({ ok: false, error: msg, from });
+    }
     redirectUrl.searchParams.set("meta_error", msg);
     return NextResponse.redirect(redirectUrl);
   }

@@ -33,6 +33,7 @@ export class InstagramGraphProvider {
 
   /**
    * Tokenning amal qilishini tekshiradi va bog'langan Instagram Business akkauntlarini aniqlaydi.
+   * Ham Facebook Graph API, ham Instagram Graph API (Instagram Login for Business) ni qo'llab-quvvatlaydi.
    */
   async checkConnection(): Promise<{
     ok: boolean;
@@ -40,6 +41,40 @@ export class InstagramGraphProvider {
     accounts?: IgAccountInfo[];
   }> {
     try {
+      // 1. Birinchi navbatda to'g'ridan-to'g'ri Instagram Graph API orqali tekshirib ko'ramiz
+      try {
+        const igMeUrl = `https://graph.instagram.com/v21.0/me?fields=id,username,name,account_type&access_token=${encodeURIComponent(
+          this.accessToken,
+        )}`;
+        const igRes = await fetch(igMeUrl, {
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(8_000),
+        });
+        const igData = (await igRes.json()) as {
+          id?: string;
+          username?: string;
+          name?: string;
+          account_type?: string;
+        };
+
+        if (igRes.ok && igData.id && igData.username) {
+          const account: IgAccountInfo = {
+            pageId: `ig_${igData.id}`,
+            pageName: igData.name || igData.username,
+            igUserId: igData.id,
+            igUsername: igData.username,
+          };
+          return {
+            ok: true,
+            message: `Instagram Business ulandi: @${igData.username}`,
+            accounts: [account],
+          };
+        }
+      } catch {
+        // Agar to'g'ridan-to'g'ri IG API bo'lmasa, Facebook Page tekshiruviga o'tamiz
+      }
+
+      // 2. Facebook Graph API orqali tekshirish (Facebook sahifasiga bog'langan Instagram)
       const url = `${this.baseUrl}/me/accounts?fields=id,name,instagram_business_account{id,username,name}&access_token=${encodeURIComponent(
         this.accessToken,
       )}`;
@@ -321,6 +356,153 @@ export class InstagramGraphProvider {
     return {
       accessToken: data.access_token,
       expiresIn: data.expires_in ?? 5184000, // 60 kun
+    };
+  }
+
+  /**
+   * Opus Clip uslubidagi "Instagram Login for Business" OAuth havolasini yaratadi.
+   * Direct Instagram Login dialogi: flow=ig_biz_login_oauth
+   */
+  static buildInstagramOAuthUrl(params: {
+    appId: string;
+    redirectUri: string;
+    state?: string;
+    scopes?: string[];
+  }): string {
+    const scopes = params.scopes ?? [
+      "instagram_business_basic",
+      "instagram_business_content_publish",
+    ];
+
+    const search = new URLSearchParams({
+      enable_fb_login: "0",
+      force_authentication: "1",
+      client_id: params.appId,
+      redirect_uri: params.redirectUri,
+      response_type: "code",
+      scope: scopes.join(","),
+    });
+
+    if (params.state) {
+      search.set("state", params.state);
+    }
+
+    return `https://www.instagram.com/oauth/authorize?${search.toString()}`;
+  }
+
+  /**
+   * Instagram Login for Business OAuth 'code' ni qisqa muddatli access tokenga almashtiradi.
+   * POST https://api.instagram.com/oauth/access_token
+   */
+  static async exchangeInstagramCodeForToken(params: {
+    code: string;
+    appId: string;
+    appSecret: string;
+    redirectUri: string;
+  }): Promise<{ accessToken: string; userId: string }> {
+    const form = new URLSearchParams({
+      client_id: params.appId,
+      client_secret: params.appSecret,
+      grant_type: "authorization_code",
+      redirect_uri: params.redirectUri,
+      code: params.code,
+    });
+
+    const res = await fetch("https://api.instagram.com/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form.toString(),
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    const data = (await res.json()) as {
+      access_token?: string;
+      user_id?: number | string;
+      error_message?: string;
+      error_type?: string;
+      code?: number;
+    };
+
+    if (!res.ok || !data.access_token) {
+      throw new IntegrationError(
+        data.error_message || `Instagram OAuth code almashishda xato (${res.status})`,
+        "meta",
+      );
+    }
+
+    return {
+      accessToken: data.access_token,
+      userId: String(data.user_id || ""),
+    };
+  }
+
+  /**
+   * Instagram qisqa muddatli tokenni 60 kunlik Long-Lived tokenga almashtiradi.
+   * GET https://graph.instagram.com/access_token?grant_type=ig_exchange_token
+   */
+  static async exchangeInstagramLongLivedToken(params: {
+    shortLivedToken: string;
+    appSecret: string;
+  }): Promise<{ accessToken: string; expiresIn: number }> {
+    const url = `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${encodeURIComponent(
+      params.appSecret,
+    )}&access_token=${encodeURIComponent(params.shortLivedToken)}`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    const data = (await res.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      error?: { message: string };
+    };
+
+    if (!res.ok || !data.access_token) {
+      throw new IntegrationError(
+        data.error?.message || `Instagram Long-lived token olishda xato (${res.status})`,
+        "meta",
+      );
+    }
+
+    return {
+      accessToken: data.access_token,
+      expiresIn: data.expires_in ?? 5184000,
+    };
+  }
+
+  /**
+   * Instagram foydalanuvchi ma'lumotlarini to'g'ridan-to'g'ri Graph API orqali oladi.
+   * GET https://graph.instagram.com/v21.0/me?fields=id,username,name,account_type
+   */
+  static async getInstagramProfile(accessToken: string): Promise<{
+    id: string;
+    username: string;
+    name?: string;
+    accountType?: string;
+  }> {
+    const url = `https://graph.instagram.com/v21.0/me?fields=id,username,name,account_type&access_token=${encodeURIComponent(
+      accessToken,
+    )}`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    const data = (await res.json()) as {
+      id?: string;
+      username?: string;
+      name?: string;
+      account_type?: string;
+      error?: { message: string };
+    };
+
+    if (!res.ok || !data.id || !data.username) {
+      throw new IntegrationError(
+        data.error?.message || `Instagram profil ma'lumotlarini olishda xato (${res.status})`,
+        "meta",
+      );
+    }
+
+    return {
+      id: data.id,
+      username: data.username,
+      name: data.name,
+      accountType: data.account_type,
     };
   }
 }

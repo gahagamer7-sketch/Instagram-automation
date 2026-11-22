@@ -4,8 +4,35 @@ import { InstagramGraphProvider } from "@autochannel/integrations";
 export async function GET(request: NextRequest) {
   const appId = process.env.META_APP_ID;
   const from = request.nextUrl.searchParams.get("from") || "/onboarding?step=4";
+  const isPopup = request.nextUrl.searchParams.get("popup") === "1";
 
   if (!appId) {
+    if (isPopup) {
+      const html = `
+        <!DOCTYPE html>
+        <html>
+          <body>
+            <script>
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'INSTAGRAM_ERROR',
+                  error: 'missing_app_id',
+                  message: 'Meta App ID sozlanmagan'
+                }, '*');
+                window.close();
+              } else {
+                window.location.href = '${from}${from.includes("?") ? "&" : "?"}meta_error=missing_app_id';
+              }
+            </script>
+            <p style="font-family:sans-serif;padding:20px;text-align:center;">Meta App ID sozlanmagan...</p>
+          </body>
+        </html>
+      `;
+      return new NextResponse(html, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      });
+    }
+
     const url = new URL(from, request.url);
     url.searchParams.set("meta_error", "missing_app_id");
     return NextResponse.redirect(url);
@@ -17,6 +44,7 @@ export async function GET(request: NextRequest) {
     JSON.stringify({
       csrf: crypto.randomUUID(),
       from,
+      popup: isPopup ? 1 : 0,
     }),
   ).toString("base64url");
 

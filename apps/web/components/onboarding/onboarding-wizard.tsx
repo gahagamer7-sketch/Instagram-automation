@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
+import { InstagramConnectModal } from "./instagram-connect-modal";
 
 export interface OnboardingState {
   hasGeminiKey: boolean;
@@ -52,6 +53,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
   const [handle, setHandle] = useState("");
   const [smartHandle, setSmartHandle] = useState("");
   const [manualMode, setManualMode] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConnecting, startConnecting] = useTransition();
   const [isFinishing, startFinishing] = useTransition();
   const [feedback, setFeedback] = useState<{ tone: "success" | "danger"; message: string } | null>(null);
@@ -359,18 +361,56 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Variant 1: 1-Klik Tezkor Ulanish (Instagram Username orqali) */}
-              <div className="p-5 rounded-2xl border border-primary/30 bg-primary/5 space-y-4">
+              {/* Variant 1: Opus Clip uslubidagi rasmiy Instagram Login for Business */}
+              <div className="p-5 rounded-2xl border border-pink-500/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-lg p-2.5">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-white">
+                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-text text-sm">
+                          Instagram Akkauntini Ulash (Opus Clip uslubi)
+                        </h4>
+                        <span className="rounded-md bg-pink-500/10 px-2 py-0.5 text-[10px] font-medium text-pink-400 border border-pink-500/20">
+                          1-Klikda
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted mt-0.5">
+                        Alohida popup oynada rasmiy Instagram rozilik dialogini ochadi (flow=ig_biz_login_oauth).
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="gradient"
+                    onClick={() => setIsModalOpen(true)}
+                    className="gap-2 shrink-0 h-10 px-5 shadow-md shadow-pink-500/20 font-semibold"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    <span>Akkauntni Ulash</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Variant 2: Tezkor Test Rejimi (@username orqali) */}
+              <div className="p-4 rounded-xl border border-border bg-surface-2 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-pink-500 to-indigo-600 text-white shadow-md">
-                    <Sparkles className="h-5 w-5" />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface border border-border text-muted">
+                    <Sparkles className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-text text-sm">
-                      1-Klik Tezkor Ulanish (Instagram @username orqali)
+                    <h4 className="font-semibold text-text text-xs">
+                      Yoki test rejimi: Instagram @username orqali tezkor bog&apos;lash
                     </h4>
-                    <p className="text-xs text-muted mt-0.5">
-                      Parol talab qilinmaydi. Akkauntizni darhol tizimga bog&apos;lab, Reels ishlab chiqarishni faollashtiring.
+                    <p className="text-[11px] text-muted">
+                      Parol talab qilinmaydi. Tizimni sinab ko&apos;rish va videolarni yaratish uchun darhol bog&apos;laydi.
                     </p>
                   </div>
                 </div>
@@ -382,49 +422,23 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                       value={smartHandle}
                       onChange={(e) => setSmartHandle(e.target.value)}
                       placeholder="@sizning_kanalingiz"
-                      className="w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text placeholder:text-muted/60 focus:border-primary focus:outline-none"
+                      className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-muted/60 focus:border-primary focus:outline-none"
                     />
                   </div>
                   <Button
-                    variant="gradient"
+                    variant="secondary"
                     disabled={isConnecting}
                     onClick={handleSmartConnect}
-                    className="gap-2 shrink-0 h-10 shadow-sm"
+                    className="gap-1.5 shrink-0 h-9 px-4 text-xs"
                   >
                     {isConnecting ? (
-                      <Clock className="h-4 w-4 animate-spin" />
+                      <Clock className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-4 w-4" />
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
                     )}
-                    <span>{isConnecting ? "Ulanmoqda..." : "Akkauntni darhol ulash"}</span>
+                    <span>{isConnecting ? "Bog'lanmoqda..." : "Tezkor bog'lash"}</span>
                   </Button>
                 </div>
-              </div>
-
-              {/* Variant 2: Rasmiy Meta OAuth 1-bosqichli ulash */}
-              <div className="p-4 rounded-xl border border-border bg-surface-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface border border-border text-muted">
-                    <Share2 className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-text text-xs">
-                      Meta OAuth orqali rasmiy ulash (Facebook Login)
-                    </h4>
-                    <p className="text-[11px] text-muted mt-0.5">
-                      Meta Developers ilovangiz sozlanganda 60 kunlik token avtomatik olinadi.
-                    </p>
-                  </div>
-                </div>
-
-                <a
-                  href="/api/auth/meta/login?from=/onboarding?step=4"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl font-semibold transition px-4 py-2 text-xs border border-border bg-surface text-text hover:border-primary/50 hover:text-primary shrink-0"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                  <span>Meta bilan ulash</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </a>
               </div>
 
               {/* Variant 3: Qo'lda kiritish (Manual) */}
@@ -587,6 +601,36 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
           </div>
         </Card>
       )}
+
+      {/* Opus Clip Uslubidagi Instagram Ulanish Modali */}
+      <InstagramConnectModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(data) => {
+          setIsIgConnected(true);
+          setHandle(data.handle);
+          setFeedback({
+            tone: "success",
+            message: `Instagram Business akkaunti (@${data.handle}) muvaffaqiyatli ulandi!`,
+          });
+        }}
+        onSmartConnect={async (handleVal) => {
+          setSmartHandle(handleVal);
+          const res = await connectInstagramAction({
+            mode: "smart",
+            handle: handleVal,
+          });
+          if (res.ok) {
+            setIsIgConnected(true);
+            setHandle(handleVal.replace(/^@+/, ""));
+            setFeedback({ tone: "success", message: res.message });
+            setIsModalOpen(false);
+          } else {
+            setFeedback({ tone: "danger", message: res.message });
+          }
+        }}
+        isSmartConnecting={isConnecting}
+      />
     </div>
   );
 }
