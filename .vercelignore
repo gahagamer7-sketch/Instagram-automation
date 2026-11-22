@@ -1,0 +1,9 @@
+.git
+.turbo
+.dev
+.env
+.env.local
+node_modules
+*.log
+dist
+
