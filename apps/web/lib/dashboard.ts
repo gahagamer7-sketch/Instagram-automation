@@ -29,8 +29,12 @@ function startOfTodayTashkent(now: Date): Date {
 export async function loadDashboardData(
   channelId?: string | null,
 ): Promise<DashboardResult> {
-  // `new Date()` va baza o'qishi faqat so'rov vaqtida bo'lishi kerak.
-  await connection();
+  // `new Date()` va baza o'qishi so'rov vaqtida bo'lishi kerak.
+  try {
+    await connection();
+  } catch {
+    // Unit test yoki request scope tashqarisida e'tiborsiz qoldiriladi
+  }
   const now = new Date();
 
   // Agar foydalanuvchida hali kanal bo'lmasa, dastlabki nol holatni qaytaramiz
