@@ -10,8 +10,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Ochiq marshrutlar: login, Next.js statik fayllari, cron (o'z bearer siri mavjud), OAuth
+  // Ochiq marshrutlar: landing page (/), login, Next.js statik fayllari, cron, OAuth
   if (
+    pathname === "/" ||
     pathname === "/login" ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api/cron") ||
@@ -29,7 +30,7 @@ export async function proxy(request: NextRequest) {
 
   if (isAuthenticated) {
     if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/", request.url));
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     return NextResponse.next();
   }

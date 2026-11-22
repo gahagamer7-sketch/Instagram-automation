@@ -8,9 +8,10 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<CardSkeleton lines={6} />}>
-      <LoginForm />
-    </Suspense>
+    <div className="min-h-dvh flex items-center justify-center p-4">
+      <Suspense fallback={<CardSkeleton lines={6} />}>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 }
-

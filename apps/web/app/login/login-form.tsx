@@ -2,17 +2,33 @@
 
 import { useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Lock, Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  ArrowRight,
+  ShieldCheck,
+  ArrowLeft,
+  KeyRound,
+} from "lucide-react";
 import { loginAction } from "./actions";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/";
+  const rawFrom = searchParams.get("from");
+  const from = !rawFrom || rawFrom === "/" ? "/dashboard" : rawFrom;
 
   const [state, formAction, isPending] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordValue, setPasswordValue] = useState("");
+
+  const handleQuickFill = () => {
+    setPasswordValue("admin");
+  };
 
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
@@ -35,12 +51,24 @@ export function LoginForm() {
           )}
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="password"
-              className="block text-xs font-semibold text-text"
-            >
-              Admin Paroli
-            </label>
+            <div className="flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold text-text"
+              >
+                Admin Paroli
+              </label>
+              <button
+                type="button"
+                onClick={handleQuickFill}
+                className="text-[11px] text-primary hover:underline flex items-center gap-1"
+                title="Dev parol: admin"
+              >
+                <KeyRound className="h-3 w-3" />
+                <span>admin</span>
+              </button>
+            </div>
+
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted">
                 <Lock className="h-4 w-4" />
@@ -49,6 +77,8 @@ export function LoginForm() {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
+                value={passwordValue}
+                onChange={(e) => setPasswordValue(e.target.value)}
                 required
                 autoFocus
                 placeholder="••••••••••••"
@@ -68,7 +98,7 @@ export function LoginForm() {
               </button>
             </div>
             <p className="text-[11px] text-muted">
-              .env faylida ko&apos;rsatilgan ADMIN_PASSWORD kaliti
+              .env faylidagi ADMIN_PASSWORD kaliti (standart: <code>admin</code>)
             </p>
           </div>
 
@@ -82,19 +112,27 @@ export function LoginForm() {
               <span>Tekshirilmoqda...</span>
             ) : (
               <>
-                <span>Tizimga kirish</span>
+                <span>Boshqaruv paneliga kirish</span>
                 <ArrowRight className="h-4 w-4" />
               </>
             )}
           </Button>
         </form>
 
-        <div className="mt-5 border-t border-border pt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted">
-          <ShieldCheck className="h-3.5 w-3.5 text-success" />
-          <span>AES-256-GCM va xavfsiz HTTP-only sessiya</span>
+        <div className="mt-5 border-t border-border pt-4 flex items-center justify-between text-[11px] text-muted">
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-success" />
+            <span>Xavfsiz HTTP-only sessiya</span>
+          </div>
+          <Link
+            href="/"
+            className="text-primary hover:underline flex items-center gap-1"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            <span>Bosh sahifaga</span>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
-

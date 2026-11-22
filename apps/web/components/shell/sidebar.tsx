@@ -13,7 +13,7 @@ export function Sidebar() {
   return (
     <aside className="hidden w-64 shrink-0 border-r border-border bg-sidebar lg:sticky lg:top-0 lg:block lg:h-dvh">
       <div className="flex h-full flex-col">
-        <Link href="/" className="flex items-center gap-3 px-5 py-5">
+        <Link href="/dashboard" className="flex items-center gap-3 px-5 py-5">
           <span className="gradient-brand flex h-9 w-9 items-center justify-center rounded-xl text-white">
             <Sparkles className="h-5 w-5" aria-hidden />
           </span>

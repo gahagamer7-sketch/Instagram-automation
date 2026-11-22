@@ -8,7 +8,7 @@ export function Topbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 lg:hidden">
+        <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
           <span className="gradient-brand flex h-8 w-8 items-center justify-center rounded-lg text-white">
             <Sparkles className="h-4 w-4" aria-hidden />
           </span>

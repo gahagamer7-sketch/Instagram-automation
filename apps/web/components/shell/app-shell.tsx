@@ -12,13 +12,13 @@ interface AppShellProps {
 
 export function AppShell({ children, sidebar, topbar, mobileNav }: AppShellProps) {
   const pathname = usePathname();
-  const isAuthPage = pathname === "/login";
+  const isPublicPage = pathname === "/" || pathname === "/login";
 
-  if (isAuthPage) {
+  if (isPublicPage) {
     return (
-      <main className="min-h-dvh flex items-center justify-center p-4 bg-background">
+      <div className="min-h-dvh bg-background text-text">
         {children}
-      </main>
+      </div>
     );
   }
 

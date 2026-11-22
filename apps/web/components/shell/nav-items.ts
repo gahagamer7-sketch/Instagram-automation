@@ -21,7 +21,7 @@ export interface NavItem {
 
 /** Sahifalar ro'yxati — TZ 4.12. */
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Bosh sahifa", icon: LayoutDashboard, mobile: true },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, mobile: true },
   { href: "/pipeline", label: "Jonli pipeline", icon: Workflow, mobile: true },
   { href: "/reels", label: "Reels kutubxonasi", icon: Clapperboard, mobile: true },
   { href: "/calendar", label: "Kontent kalendar", icon: CalendarDays },
@@ -35,6 +35,6 @@ export const NAV_ITEMS: NavItem[] = [
 export const MOBILE_NAV_ITEMS = NAV_ITEMS.filter((item) => item.mobile);
 
 export function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
+  if (href === "/dashboard") return pathname === "/dashboard";
   return pathname === href || pathname.startsWith(`${href}/`);
 }

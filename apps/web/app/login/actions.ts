@@ -9,13 +9,14 @@ export async function loginAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message?: string }> {
   const password = formData.get("password") as string;
-  const from = (formData.get("from") as string) || "/";
+  const rawFrom = (formData.get("from") as string) || "/dashboard";
+  const target = !rawFrom || rawFrom === "/" ? "/dashboard" : rawFrom;
 
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   // Agar ADMIN_PASSWORD belgilanmagan bo'lsa, to'g'ridan-to'g'ri o'tkaziladi
   if (!adminPassword) {
-    redirect(from);
+    redirect(target);
   }
 
   if (!password || password !== adminPassword) {
@@ -32,7 +33,7 @@ export async function loginAction(
     maxAge: SESSION_MAX_AGE_SEC,
   });
 
-  redirect(from);
+  redirect(target);
 }
 
 export async function logoutAction(): Promise<void> {
