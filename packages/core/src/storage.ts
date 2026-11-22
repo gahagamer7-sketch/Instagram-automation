@@ -56,3 +56,4 @@ export async function uploadVideoAndCover(
 
   return { videoUrl, coverUrl };
 }
+

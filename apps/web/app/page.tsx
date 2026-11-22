@@ -16,9 +16,9 @@ export default function HomePage() {
         title="Bosh sahifa"
         description="Kanal holati, bugungi ishlab chiqarish va keyingi Reels. Hamma bosqich avtomatik ishlaydi."
         action={
-          <Link href="/settings" className={buttonClass("gradient", "md")}>
-            <KeyRound className="h-4 w-4" aria-hidden />
-            Kalitlarni sozlash
+          <Link href="/onboarding" className={buttonClass("gradient", "md")}>
+            <Rocket className="h-4 w-4" aria-hidden />
+            Ishga tushirish (Onboarding)
           </Link>
         }
       />
@@ -189,6 +189,17 @@ async function SetupChecklist() {
           </li>
         ))}
       </ul>
+
+      <div className="mt-4 pt-3 border-t border-border flex justify-end">
+        <Link
+          href="/onboarding"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+        >
+          <Rocket className="h-3.5 w-3.5" />
+          Onboarding ustasini ochish
+          <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
     </Card>
   );
 }

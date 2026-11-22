@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@autochannel/db";
+import { decrypt } from "@autochannel/crypto";
+import { InstagramGraphProvider } from "@autochannel/integrations";
 
 function authorized(request: Request): boolean {
   const auth = request.headers.get("authorization");
@@ -70,33 +72,65 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Instagram Graph API bilan joylash simulyatsiyasi va chaqiruvi
+      // Instagram Graph API bilan joylash
       try {
         await prisma.video.update({
           where: { id: video.id },
           data: { status: "publishing" },
         });
 
-        // Agar video URL bo'lmasa xato
         if (!video.fileUrl) {
           throw new Error("Video fayl havolasi (fileUrl) mavjud emas.");
         }
 
-        // TODO: Graph API media container yaratish va publish qilish
-        // POST /{igUserId}/media -> { id: containerId }
-        // POST /{igUserId}/media_publish -> { id: mediaId }
+        const encKey = process.env.ENCRYPTION_KEY;
+        if (!encKey) {
+          throw new Error("ENCRYPTION_KEY sozlanmagan.");
+        }
+
+        const decryptedToken = decrypt(oauth.accessToken, encKey);
+        const igProvider = new InstagramGraphProvider(decryptedToken);
+
+        // Caption va hashtaglar tayyorlash (TZ 4.6: AI belgisi bilan)
+        const hashtagText = video.hashtags.length > 0 ? `\n\n${video.hashtags.join(" ")}` : "";
+        const aiDisclosure = video.aiLabeled ? "\n\n🤖 Kontent sun'iy intellekt yordamida yaratilgan" : "";
+        const fullCaption = `${video.caption ?? ""}${hashtagText}${aiDisclosure}`.trim();
+
+        // 1. Container yaratish
+        const containerId = await igProvider.createReelsContainer({
+          igUserId: channel.igUserId,
+          videoUrl: video.fileUrl,
+          caption: fullCaption,
+          coverUrl: video.coverUrl ?? undefined,
+        });
+
+        // 2. Status FINISHED bo'lguncha kutish
+        await igProvider.waitForContainerReady(containerId, 180, 5000);
+
+        // 3. E'lon qilish (media_publish)
+        const mediaId = await igProvider.publishMedia(channel.igUserId, containerId);
 
         await prisma.video.update({
           where: { id: video.id },
           data: {
             status: "published",
             publishedAt: new Date(),
-            igMediaId: `mock_ig_${Date.now()}`,
+            igContainerId: containerId,
+            igMediaId: mediaId,
+          },
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            actor: "cron.publish",
+            action: "reels.published",
+            target: `videos/${video.id}`,
+            details: { mediaId, igUserId: channel.igUserId },
           },
         });
 
         publishedResults.push({ id: video.id, status: "published" });
-        consecutiveErrors = 0; // xatoliklar hisoblagichi nollanadi
+        consecutiveErrors = 0;
       } catch (publishErr) {
         consecutiveErrors++;
         const errMsg = publishErr instanceof Error ? publishErr.message : String(publishErr);

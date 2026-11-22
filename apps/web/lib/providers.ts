@@ -27,11 +27,11 @@ export const PROVIDERS: ProviderMeta[] = [
     id: "meta",
     label: "Meta / Instagram",
     description:
-      "Instagram Business akkauntni ulash va Reels joylash uchun app secret.",
-    keyLabel: "Meta app secret",
+      "Instagram Business akkauntni ulash va Reels joylash uchun access token.",
+    keyLabel: "Meta / Instagram Access Token",
     docsUrl: "https://developers.facebook.com/apps",
     docsLabel: "developers.facebook.com",
-    testable: false,
+    testable: true,
   },
   {
     id: "youtube",
@@ -40,7 +40,7 @@ export const PROVIDERS: ProviderMeta[] = [
     keyLabel: "YouTube API kaliti",
     docsUrl: "https://console.cloud.google.com/apis/credentials",
     docsLabel: "console.cloud.google.com",
-    testable: false,
+    testable: true,
   },
   {
     id: "pexels",
