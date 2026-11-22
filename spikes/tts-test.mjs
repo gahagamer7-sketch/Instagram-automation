@@ -15,9 +15,11 @@ const TEXT =
   "Bugun biz moliyaviy savodxonlik haqida gaplashamiz. " +
   "Pulni to'g'ri boshqarish — o'z kelajagingizga qilingan eng yaxshi sarmoya.";
 
+const SPEAK_INSTRUCTION = "Speak in Uzbek (Northern Uzbek), natural and clear.";
+
 // TZ'da: gemini-3.8-flash-lite-tts; zaxira variantlar ham sinaladi.
 const MODELS = (process.env.GEMINI_TTS_MODELS ||
-  "gemini-3.8-flash-lite-tts,gemini-2.5-flash-preview-tts")
+  "gemini-3.8-flash-lite-tts,gemini-3.8-flash-tts")
   .split(",")
   .map((m) => m.trim());
 
@@ -57,12 +59,14 @@ outer: for (const model of MODELS) {
   for (const voice of VOICES) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
     const body = {
-      contents: [{ role: "user", parts: [{ text: TEXT }] }],
+      contents: [
+        { role: "user", parts: [{ text: `${SPEAK_INSTRUCTION}\n\n${TEXT}` }] },
+      ],
       generationConfig: {
         responseModalities: ["AUDIO"],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voice, languageCode: "uz-UZ" },
+            prebuiltVoiceConfig: { voiceName: voice },
           },
         },
       },

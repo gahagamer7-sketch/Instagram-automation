@@ -11,7 +11,7 @@ if (!key) {
 }
 
 const MODELS = (process.env.GEMINI_IMAGE_MODELS ||
-  "gemini-2.5-flash-image,gemini-2.0-flash-preview-image-generation")
+  "gemini-3.1-flash-image,gemini-2.5-flash-image")
   .split(",")
   .map((m) => m.trim());
 
