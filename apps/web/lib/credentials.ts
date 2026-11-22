@@ -1,7 +1,12 @@
 import { prisma } from "@autochannel/db";
 import { encrypt, decrypt, last4 } from "@autochannel/crypto";
 import { createProvider, type AiProvider } from "@autochannel/ai";
-import { YouTubeProvider, InstagramGraphProvider, TelegramProvider } from "@autochannel/integrations";
+import {
+  YouTubeProvider,
+  InstagramGraphProvider,
+  TelegramProvider,
+  PexelsProvider,
+} from "@autochannel/integrations";
 
 function getEncryptionKey(): string {
   const key = process.env.ENCRYPTION_KEY;
@@ -99,6 +104,9 @@ export async function testCredential(id: string): Promise<{
   } else if (row.provider === "telegram") {
     const tg = new TelegramProvider(decrypt(row.encryptedKey, encKey));
     result = await tg.checkConnection();
+  } else if (row.provider === "pexels") {
+    const pexels = new PexelsProvider(decrypt(row.encryptedKey, encKey));
+    result = await pexels.checkConnection();
   } else {
     result = { ok: false, message: `"${row.provider}" provayderi testi hali qo'shilmagan` };
   }

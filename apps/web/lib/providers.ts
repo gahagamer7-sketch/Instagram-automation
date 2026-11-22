@@ -49,7 +49,7 @@ export const PROVIDERS: ProviderMeta[] = [
     keyLabel: "Pexels API kaliti",
     docsUrl: "https://www.pexels.com/api/",
     docsLabel: "pexels.com/api",
-    testable: false,
+    testable: true,
   },
   {
     id: "telegram",

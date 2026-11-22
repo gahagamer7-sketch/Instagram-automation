@@ -175,12 +175,56 @@ async function main() {
 
     // 6. Bosqich 3: FFmpeg orqali 1080x1920 video render qilish
     console.log("[worker] [Bosqich 3] FFmpeg montaj va render (1080x1920)...");
+
+    let backgroundMedia: { type: "video" | "image"; path: string } | undefined;
+
+    try {
+      const pexelsCred = await prisma.apiCredential.findUnique({
+        where: { provider: "pexels" },
+      });
+      const pexelsKey = pexelsCred
+        ? decrypt(pexelsCred.encryptedKey, getEncryptionKey())
+        : process.env.PEXELS_API_KEY;
+
+      if (pexelsKey) {
+        const { PexelsProvider } = await import("@autochannel/integrations");
+        const pexels = new PexelsProvider(pexelsKey);
+        const searchQuery = video.idea?.topic?.slice(0, 30) || niche;
+        const videos = await pexels.searchVerticalVideos(searchQuery, 1);
+
+        if (videos.length > 0 && videos[0].videoFiles.length > 0) {
+          const file =
+            videos[0].videoFiles.find((f) => f.height >= 1080) ||
+            videos[0].videoFiles[0];
+
+          if (file?.link) {
+            console.log(`[worker] Pexels stock video topildi: ${file.link.slice(0, 50)}...`);
+            const bgResponse = await fetch(file.link, {
+              signal: AbortSignal.timeout(30_000),
+            });
+            if (bgResponse.ok) {
+              const bgBuffer = Buffer.from(await bgResponse.arrayBuffer());
+              const bgPath = join(outputDir, "stock_bg.mp4");
+              await writeFile(bgPath, bgBuffer);
+              backgroundMedia = { type: "video", path: bgPath };
+            }
+          }
+        }
+      }
+    } catch (pexelsErr) {
+      console.warn(
+        "[worker] Pexels stock video yuklashda ogohlantirish (standart fon ishlatiladi):",
+        pexelsErr,
+      );
+    }
+
     const renderResult = await renderReelsVideo({
       audioPath,
       shotList,
       channelName,
       outputDir,
       durationSec: speech.durationSec,
+      backgroundMedia,
     });
 
     await prisma.video.update({

@@ -10,6 +10,10 @@ export interface RenderOptions {
   channelName: string;
   outputDir: string;
   durationSec?: number;
+  backgroundMedia?: {
+    type: "video" | "image";
+    path: string;
+  };
 }
 
 export interface RenderResult {
@@ -145,16 +149,28 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
   // Subtitr fayli yo'lini FFmpeg filtri uchun moslash (Windows backslash to'g'irlash)
   const escapedAssPath = assPath.replace(/\\/g, "/").replace(/:/g, "\\:");
 
+  const inputArgs: string[] = [];
+  let videoFilter = `ass=${escapedAssPath}`;
+
+  if (options.backgroundMedia) {
+    const bgPath = options.backgroundMedia.path.replace(/\\/g, "/");
+    if (options.backgroundMedia.type === "video") {
+      inputArgs.push("-stream_loop", "-1", "-i", bgPath);
+    } else {
+      inputArgs.push("-loop", "1", "-i", bgPath);
+    }
+    videoFilter = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,ass=${escapedAssPath}`;
+  } else {
+    inputArgs.push("-f", "lavfi", "-i", `color=c=0x0B1220:s=1080x1920:r=30:d=${roundedDuration}`);
+  }
+
   const ffmpegArgs = [
     "-y",
-    "-f",
-    "lavfi",
-    "-i",
-    `color=c=0x0B1220:s=1080x1920:r=30:d=${roundedDuration}`,
+    ...inputArgs,
     "-i",
     audioPath,
     "-vf",
-    `ass=${escapedAssPath}`,
+    videoFilter,
     "-c:v",
     "libx264",
     "-preset",

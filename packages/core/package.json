@@ -12,6 +12,7 @@
     "@autochannel/ai": "workspace:*",
     "@autochannel/crypto": "workspace:*",
     "@autochannel/db": "workspace:*",
+    "@autochannel/integrations": "workspace:*",
     "@vercel/blob": "^2.9.0"
   },
   "devDependencies": {

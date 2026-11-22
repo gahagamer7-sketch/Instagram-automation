@@ -211,7 +211,7 @@ function PipelineCard() {
     <Card>
       <CardHeader
         title="Jonli pipeline"
-        description="Har Reels shu bosqichlardan o'tadi. Ishlab chiqarish bosqichi keyingi sprintda ulanadi."
+        description="Har bir Reels shu bosqichlardan to'liq avtomatik o'tadi va Instagram'ga e'lon qilinadi."
         action={
           <Link href="/pipeline" className="text-sm text-primary hover:underline">
             Batafsil

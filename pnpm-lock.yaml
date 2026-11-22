@@ -266,6 +266,9 @@ importers:
       '@autochannel/db':
         specifier: workspace:*
         version: link:../db
+      '@autochannel/integrations':
+        specifier: workspace:*
+        version: link:../integrations
       '@vercel/blob':
         specifier: ^2.9.0
         version: 2.9.0
