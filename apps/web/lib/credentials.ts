@@ -1,6 +1,6 @@
 import { prisma } from "@autochannel/db";
 import { encrypt, decrypt, last4 } from "@autochannel/crypto";
-import { createProvider } from "@autochannel/ai";
+import { createProvider, type AiProvider } from "@autochannel/ai";
 
 function getEncryptionKey(): string {
   const key = process.env.ENCRYPTION_KEY;
@@ -99,4 +99,36 @@ export async function testCredential(id: string): Promise<{
     data: { status, lastCheckedAt: new Date(), lastError: result.ok ? null : result.message },
   });
   return { ...result, status };
+}
+
+export type ProviderLookup =
+  | { ok: true; provider: AiProvider; credentialId: string }
+  | { ok: false; message: string };
+
+/**
+ * AI chaqiruvi uchun tayyor provayder (kalit deshifrlanadi).
+ * Kalit yo'q bo'lsa — bosqich "kalit kerak" holatida to'xtaydi (TZ 4.10).
+ */
+export async function getAiProvider(): Promise<ProviderLookup> {
+  try {
+    const encKey = getEncryptionKey();
+    const row = await prisma.apiCredential.findUnique({ where: { provider: "gemini" } });
+    if (!row) {
+      return {
+        ok: false,
+        message:
+          "Gemini kaliti kiritilmagan. Sozlamalar → API kalitlar bo'limida kalitni kiriting va tekshiring.",
+      };
+    }
+    return {
+      ok: true,
+      provider: createProvider("gemini", decrypt(row.encryptedKey, encKey)),
+      credentialId: row.id,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
