@@ -1,0 +1,326 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ Kanallar va auth ============
+
+model Channel {
+  id         String        @id @default(cuid())
+  platform   String        @default("instagram")
+  name       String
+  handle     String?
+  igUserId   String?       @unique
+  fbPageId   String?
+  niche      String?
+  language   String        @default("uz")
+  status     ChannelStatus @default(setup)
+  brandKitId String?       @unique
+  brandKit   BrandKit?     @relation(fields: [brandKitId], references: [id])
+  oauthToken OauthToken?
+  videos     Video[]
+  ideas      ContentIdea[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@map("channels")
+}
+
+enum ChannelStatus {
+  setup
+  niche_test
+  active
+  paused
+}
+
+model OauthToken {
+  id           String    @id @default(cuid())
+  channelId    String    @unique
+  channel      Channel   @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  accessToken  String // AES-256-GCM shifrlangan
+  refreshToken String? // AES-256-GCM shifrlangan
+  expiresAt    DateTime?
+  scopes       String[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("oauth_tokens")
+}
+
+model ApiCredential {
+  id            String           @id @default(cuid())
+  provider      String // gemini | meta | youtube | pexels | telegram
+  encryptedKey  String // AES-256-GCM
+  last4         String
+  status        CredentialStatus @default(unverified)
+  dailyLimit    Decimal?         @db.Decimal(10, 4)
+  monthlyLimit  Decimal?         @db.Decimal(10, 4)
+  dailySpent    Decimal          @default(0) @db.Decimal(10, 4)
+  monthlySpent  Decimal          @default(0) @db.Decimal(10, 4)
+  lastCheckedAt DateTime?
+  lastError     String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([provider])
+  @@map("api_credentials")
+}
+
+enum CredentialStatus {
+  unverified
+  connected
+  error
+  quota_warning
+}
+
+// ============ Skill va sozlamalar ============
+
+model Skill {
+  id        String   @id @default(cuid())
+  name      String
+  text      String   @db.Text
+  version   Int      @default(1)
+  isActive  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  videos    Video[]
+
+  @@unique([name, version])
+  @@map("skills")
+}
+
+model AppSetting {
+  id            String    @id @default(cuid())
+  autoMode      Boolean   @default(true) // avto | yarim avto
+  paused        Boolean   @default(false) // "To'xtatish" / avto-pauza
+  pauseReason   String?
+  publishHours  Int[]     @default([19]) // UTC+5 soatlari
+  timezone      String    @default("Asia/Tashkent")
+  dailyReelsMax Int       @default(1)
+  onboardedAt   DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@map("app_settings")
+}
+
+// ============ Nisha va brend ============
+
+model NicheCandidate {
+  id                  String      @id @default(cuid())
+  niche               String
+  signals             Json // manbalar va xom signallar
+  scoreDemand         Float       @default(0)
+  scoreCompetition    Float       @default(0)
+  scoreAutomation     Float       @default(0)
+  scoreMonetization   Float       @default(0)
+  scoreContentReserve Float       @default(0)
+  scoreTotal          Float       @default(0)
+  status              NicheStatus @default(candidate)
+  testStartAt         DateTime?
+  testEndAt           DateTime?
+  testResult          Json? // 14 kunlik sinov metrikalari
+  evaluatedAt         DateTime    @default(now())
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@map("niche_candidates")
+}
+
+enum NicheStatus {
+  candidate
+  testing
+  winner
+  rejected
+}
+
+model BrandKit {
+  id               String      @id @default(cuid())
+  nameOptions      Json // 10 nom varianti
+  chosenName       String?
+  slogan           String?
+  bio              String?
+  keywords         String[]
+  colors           Json // palitra
+  font             String?
+  logoUrl          String?
+  avatarUrl        String?
+  coverTemplateUrl String?
+  voiceId          String? // TTS ovozi
+  introPath        String?
+  outroPath        String?
+  status           BrandStatus @default(draft)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  channel          Channel?
+
+  @@map("brand_kits")
+}
+
+enum BrandStatus {
+  draft
+  proposed
+  applied
+}
+
+// ============ Kontent ============
+
+model ContentIdea {
+  id        String     @id @default(cuid())
+  channelId String
+  channel   Channel    @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  topic     String
+  embedding Float[]    @default([]) // takrorlanmaslik tekshiruvi (pgvector keyin)
+  source    String? // trends | youtube | telegram | llm
+  status    IdeaStatus @default(new)
+  createdAt DateTime   @default(now())
+  videos    Video[]
+
+  @@map("content_ideas")
+}
+
+enum IdeaStatus {
+  new
+  scheduled
+  used
+  rejected
+}
+
+model Video {
+  id            String              @id @default(cuid())
+  channelId     String
+  channel       Channel             @relation(fields: [channelId], references: [id])
+  ideaId        String?
+  idea          ContentIdea?        @relation(fields: [ideaId], references: [id])
+  skillId       String?
+  skill         Skill?              @relation(fields: [skillId], references: [id])
+  status        VideoStatus         @default(idea)
+  caption       String?
+  hashtags      String[]
+  coverUrl      String?
+  fileUrl       String? // Blob/R2
+  durationSec   Float?
+  qaReport      Json?
+  attempts      Int                 @default(0)
+  error         String?
+  publishedAt   DateTime?
+  scheduledFor  DateTime?
+  igContainerId String?
+  igMediaId     String?
+  aiLabeled     Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  scripts       Script[]
+  snapshots     AnalyticsSnapshot[]
+  costLogs      CostLog[]
+
+  @@index([status])
+  @@index([scheduledFor])
+  @@map("videos")
+}
+
+enum VideoStatus {
+  idea
+  script
+  voice
+  render
+  qa
+  ready
+  publishing
+  published
+  failed
+}
+
+model Script {
+  id            String   @id @default(cuid())
+  videoId       String
+  video         Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  text          String   @db.Text
+  shotList      Json
+  hookText      String?
+  ctaText       String?
+  onScreenTexts Json?
+  version       Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+
+  @@map("scripts")
+}
+
+// ============ Ish jarayoni ============
+
+model Job {
+  id          String    @id @default(cuid())
+  type        String // produce_daily | publish | analytics_pull | niche_discovery | ...
+  payload     Json?
+  status      JobStatus @default(pending)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  error       String?
+  videoId     String?
+  runAt       DateTime  @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, runAt])
+  @@map("jobs")
+}
+
+enum JobStatus {
+  pending
+  running
+  done
+  failed
+  waiting_limit
+  cancelled
+}
+
+model AnalyticsSnapshot {
+  id              String   @id @default(cuid())
+  videoId         String
+  video           Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  date            DateTime @db.Date
+  plays           Int      @default(0)
+  reach           Int      @default(0)
+  saves           Int      @default(0)
+  shares          Int      @default(0)
+  avgWatchTime    Float    @default(0)
+  followersGained Int      @default(0)
+  raw             Json?
+  createdAt       DateTime @default(now())
+
+  @@unique([videoId, date])
+  @@map("analytics_snapshots")
+}
+
+model CostLog {
+  id        String   @id @default(cuid())
+  videoId   String?
+  video     Video?   @relation(fields: [videoId], references: [id])
+  provider  String
+  kind      String // text | tts | image | render | api_call
+  amount    Float    @default(0) // token yoki so'rov miqdori
+  costUsd   Float    @default(0)
+  limitHit  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([provider, createdAt])
+  @@map("cost_logs")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String // admin | system | worker | cron
+  action    String
+  target    String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
