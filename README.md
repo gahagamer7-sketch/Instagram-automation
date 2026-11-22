@@ -57,25 +57,24 @@ Lokal baza PostgreSQL wire-protokolini taqlid qiladi, shuning uchun `DATABASE_UR
 
 Bajarildi:
 
-- monorepo skeleti, Prisma sxemasi (12 jadval), AES-256-GCM shifrlash
-- Gemini adapteri: matn (fallback model bilan), TTS (o'zbekcha), embedding
-- **Sozlamalar → API kalitlar**: kalit kiritish, shifrlash, oxirgi 4 belgi,
-  xarajat limitlari, "Ulanishni tekshirish" (haqiqiy so'rov bilan)
-- **Panel skeleti**: yon menyu, mobil pastki navigatsiya, yuqori panelda tizim
-  holati va "To'xtatish"/"Davom ettirish" tugmasi
-- **Bosh sahifa**: ishga tushirish ro'yxati, navbat holati, bugungi xarajat
-- dizayn tizimi: ko'k palitra, dark/light, 16px karta radiusi, WCAG AA fokus
-- lokal dev bazasi (PGlite) + baseline migratsiya + seed
+- **Monorepo & DB**: Prisma sxemasi (12 jadval), AES-256-GCM shifrlash, PGlite dev-baza va seed.
+- **AI Adapteri**: Gemini matn, TTS (o'zbekcha tabiiy ovoz), embedding va wav utils.
+- **Sozlamalar & API Kalitlar**: Gemini va YouTube API kalitlari, oxirgi 4 belgi, xarajat limitlari, "Ulanishni tekshirish".
+- **Skill Muharriri (`/settings/skill`)**: matn tahriri, `.md` yuklash, versiyalar tarixi va faol versiya boshqaruvi.
+- **Nisha Kashfiyotchisi (`/niche`)**: YouTube (UZ) va Gemini signallari, 5 mezonli ballash (talab, raqobat, avtomat., monetiz., zaxira), g'olibni tanlash va kanalga biriktirish.
+- **Brend Studiyasi (`/brand`)**: 10 nom varianti, slogan, bio (150 belgigacha), 4 xil 1080x1080 vektorli SVG avatar va 9:16 Reels muqova shabloni, SVG yuklab olish.
+- **Kontent Kalendar (`/calendar`)**: 15-30 kunlik rejalashtirish, kunlik jadval (19:00 UTC+5), AI ssenariy generatori.
+- **Ssenariy & QA Engine (`@autochannel/core`)**: Hook (0-3s), Shot List, TTS ovozli matn, Captions, Hashtaglar, qat'iy xavfsizlik va Meta qoidalari filtri.
+- **Reels Kutubxonasi (`/reels`)**: 9:16 kartalar, ssenariyni ko'rish modali, statuslar bo'yicha filtr.
+- **Jonli Pipeline (`/pipeline`)**: 7 bosqichli vizual oqim, fon vazifalari navbati (Jobs queue), qayta urinish va bekor qilish, avto-pauza nazorati.
+- **Cron API**: Vercel Cron #1 (`/api/cron/produce`) va Cron #2 (`/api/cron/publish`) marshrutlari (idempotent, avto-pauza).
 
 Keyingi bosqichlar (TZ 10-bo'lim):
 
-1. Skill muharriri (matn, `.md` yuklash, versiyalar, "Sinab ko'rish")
-2. Nisha kashfiyotchisi (Trends/YouTube signallari + LLM baholash)
-3. Brend studiyasi (nom, bio, avatar — SVG/HTML shablonlari; Gemini rasm bepul
-   tarifda 429 qaytargani uchun)
-4. Ssenariy → TTS → FFmpeg/Remotion render → QA pipeline
-5. Publisher (Instagram Graph) + jadval + avto-pauza, Telegram xabarlar
-6. Analytics + haftalik hisobot
+1. FFmpeg / Remotion video montaj renderi (GitHub Actions worker)
+2. Meta OAuth ulanishi va Instagram Graph API Reels joylash konteyneri
+3. Telegram bot bildirishnomalari (avto-pauza va kunlik hisobot)
+4. Instagram Insights analytics yig'uvchi va haftalik hisobot
 
 ## Xavfsizlik
 
