@@ -103,17 +103,22 @@ async function DashboardHeader() {
 
       <div className="flex items-center gap-2">
         {channel?.handle ? (
-          <div className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-text">
+          <Link
+            href="/onboarding?step=4"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-text hover:border-pink-500/40 transition group"
+            title="Instagram sozlamalarini ko'rish yoki boshqarish"
+          >
             <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
             <span className="font-medium">@{channel.handle}</span>
-          </div>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          </Link>
         ) : (
           <Link
             href="/onboarding?step=4"
             className="flex items-center gap-1.5 rounded-xl border border-pink-500/30 bg-pink-500/10 px-3 py-1.5 text-xs font-medium text-pink-500 hover:bg-pink-500/20 transition"
           >
             <InstagramIcon className="h-3.5 w-3.5" />
-            <span>Instagram ulash</span>
+            <span>Continue with Instagram</span>
           </Link>
         )}
 

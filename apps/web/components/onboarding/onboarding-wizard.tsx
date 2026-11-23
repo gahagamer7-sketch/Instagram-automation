@@ -18,7 +18,11 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useState, useTransition, useEffect } from "react";
-import { connectInstagramAction, finishOnboardingAction } from "@/app/onboarding/actions";
+import {
+  connectInstagramAction,
+  disconnectInstagramAction,
+  finishOnboardingAction,
+} from "@/app/onboarding/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,10 +62,15 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
   const [isFinishing, startFinishing] = useTransition();
   const [feedback, setFeedback] = useState<{ tone: "success" | "danger"; message: string } | null>(null);
   const [isIgConnected, setIsIgConnected] = useState(initial.hasInstagram);
+  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<string | null>(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   useEffect(() => {
-    const metaSuccess = searchParams.get("meta_success");
-    const metaError = searchParams.get("meta_error");
+    const instagramSuccess =
+      searchParams.get("instagram_success") || searchParams.get("meta_success");
+    const instagramError =
+      searchParams.get("instagram_error") || searchParams.get("meta_error");
     const stepParam = searchParams.get("step");
     const handleParam = searchParams.get("handle");
 
@@ -72,18 +81,18 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
       }
     }
 
-    if (metaSuccess === "1") {
+    if (instagramSuccess === "1") {
       setIsIgConnected(true);
       if (handleParam) setHandle(handleParam);
       setFeedback({
         tone: "success",
-        message: `Instagram Business akkaunti (@${handleParam || "Instagram"}) muvaffaqiyatli ulandi!`,
+        message: `Instagram Professional akkaunti (@${handleParam || "Instagram"}) muvaffaqiyatli ulandi!`,
       });
-    } else if (metaError) {
-      let msg = metaError;
-      if (metaError === "missing_app_id") {
+    } else if (instagramError) {
+      let msg = instagramError;
+      if (instagramError === "missing_app_id") {
         msg =
-          "Meta App ID hali sozlanmagan. Iltimos, quyidagi '1-Klik Tezkor Ulanish' orqali Instagram username'ingizni kiritib darhol ulang yoki META_APP_ID kalitini sozlang.";
+          "Instagram App ID sozlanmagan. Iltimos, Meta App Dashboard orqali Instagram App ID kiriting.";
       }
       setFeedback({ tone: "danger", message: msg });
     }
@@ -350,18 +359,77 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
           </div>
 
           {isIgConnected ? (
-            <div className="p-4 rounded-xl border border-success/40 bg-success/10 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-success text-sm font-medium">
-                <CheckCircle2 className="h-5 w-5" />
-                <span>Instagram akkauntingiz muvaffaqiyatli ulangan! {handle ? `(@${handle})` : ""}</span>
+            <div className="p-5 rounded-2xl border border-success/40 bg-success/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                {profilePictureUrl ? (
+                  <img
+                    src={profilePictureUrl}
+                    alt={handle || "Instagram"}
+                    className="h-12 w-12 rounded-full object-cover ring-2 ring-success/40"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-lg p-2.5">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-white">
+                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                    </svg>
+                  </div>
+                )}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-text text-base">
+                      {handle ? `@${handle}` : "Instagram akkaunti"}
+                    </span>
+                    <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-medium text-success border border-success/20">
+                      Ulangan (Active)
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted mt-0.5">
+                    {accountType || "Instagram Professional akkaunt (Graph API faol)"}
+                  </p>
+                </div>
               </div>
-              <Button size="sm" variant="secondary" onClick={() => setIsIgConnected(false)}>
-                Qayta sozlash
-              </Button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => setIsModalOpen(true)}
+                  className="text-xs h-9"
+                >
+                  Qayta ulash
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={isDisconnecting}
+                  onClick={async () => {
+                    setIsDisconnecting(true);
+                    try {
+                      const res = await disconnectInstagramAction();
+                      if (res.ok) {
+                        setIsIgConnected(false);
+                        setHandle("");
+                        setProfilePictureUrl(null);
+                        setAccountType(null);
+                        setFeedback({ tone: "success", message: res.message });
+                      } else {
+                        setFeedback({ tone: "danger", message: res.message });
+                      }
+                    } finally {
+                      setIsDisconnecting(false);
+                    }
+                  }}
+                  className="text-xs h-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                >
+                  {isDisconnecting ? "Uzilmoqda..." : "Akkauntni uzish"}
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Variant 1: Opus Clip uslubidagi rasmiy Instagram Login for Business */}
+              {/* Variant 1: Rasmiy Instagram Login for Business */}
               <div className="p-5 rounded-2xl border border-pink-500/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3.5">
@@ -375,14 +443,14 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-text text-sm">
-                          Instagram Akkauntini To&apos;g&apos;ridan-to&apos;g&apos;ri Ulash
+                          Instagram API with Instagram Login
                         </h4>
                         <span className="rounded-md bg-pink-500/10 px-2 py-0.5 text-[10px] font-medium text-pink-400 border border-pink-500/20">
                           Tavsiya etiladi
                         </span>
                       </div>
                       <p className="text-xs text-muted mt-0.5">
-                        Instagram login va parolingiz orqali darhol bog&apos;lang. Facebook yoki Portfolio talab etilmaydi.
+                        Rasmiy Instagram OAuth dialogi orqali to&apos;g&apos;ridan-to&apos;g&apos;ri bog&apos;lanish.
                       </p>
                     </div>
                   </div>
@@ -391,10 +459,9 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                     type="button"
                     variant="gradient"
                     onClick={() => setIsModalOpen(true)}
-                    className="gap-2 shrink-0 h-10 px-5 shadow-md shadow-pink-500/20 font-semibold"
+                    className="gap-2 shrink-0 h-11 px-5 shadow-lg shadow-pink-500/20 font-bold tracking-wide"
                   >
-                    <Share2 className="h-4 w-4" />
-                    <span>Akkauntni Ulash</span>
+                    <span>Continue with Instagram</span>
                   </Button>
                 </div>
               </div>
@@ -602,17 +669,41 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
         </Card>
       )}
 
-      {/* Opus Clip Uslubidagi Instagram Ulanish Modali */}
+      {/* Rasmiy Instagram Ulanish Modali */}
       <InstagramConnectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        connectedAccount={{
+          handle: handle || undefined,
+          igUserId: igUserId || undefined,
+          profilePictureUrl: profilePictureUrl || undefined,
+          accountType: accountType || undefined,
+        }}
+        onDisconnect={async () => {
+          const res = await disconnectInstagramAction();
+          if (res.ok) {
+            setIsIgConnected(false);
+            setHandle("");
+            setIgUserId("");
+            setProfilePictureUrl(null);
+            setAccountType(null);
+            setFeedback({ tone: "success", message: res.message });
+            setIsModalOpen(false);
+          } else {
+            setFeedback({ tone: "danger", message: res.message });
+          }
+        }}
         onSuccess={(data) => {
           setIsIgConnected(true);
           setHandle(data.handle);
+          setIgUserId(data.igUserId);
+          if (data.profilePictureUrl) setProfilePictureUrl(data.profilePictureUrl);
+          if (data.accountType) setAccountType(data.accountType);
           setFeedback({
             tone: "success",
-            message: `Instagram Business akkaunti (@${data.handle}) muvaffaqiyatli ulandi!`,
+            message: `Instagram Professional akkaunti (@${data.handle}) muvaffaqiyatli ulandi!`,
           });
+          setIsModalOpen(false);
         }}
         onSmartConnect={async (handleVal) => {
           setSmartHandle(handleVal);

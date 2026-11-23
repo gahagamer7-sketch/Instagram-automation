@@ -8,6 +8,25 @@ export interface IgAccountInfo {
   pageName: string;
   igUserId: string;
   igUsername: string;
+  accountType?: string;
+  profilePictureUrl?: string;
+}
+
+export interface InstagramUserProfile {
+  id: string;
+  username: string;
+  name?: string;
+  accountType?: string;
+  profilePictureUrl?: string;
+}
+
+export interface BuildInstagramOAuthUrlOptions {
+  appId: string;
+  redirectUri: string;
+  state?: string;
+  scopes?: string[];
+  enableFbLogin?: boolean;
+  forceAuthentication?: boolean;
 }
 
 export interface CreateReelsContainerOptions {
@@ -264,23 +283,28 @@ export class InstagramGraphProvider {
    */
   static buildOAuthUrl(params: {
     appId: string;
+    configId?: string;
     redirectUri: string;
     state?: string;
     scopes?: string[];
   }): string {
-    const scopes = params.scopes ?? [
-      "instagram_basic",
-      "instagram_content_publish",
-      "pages_show_list",
-      "pages_read_engagement",
-    ];
-
     const search = new URLSearchParams({
       client_id: params.appId,
       redirect_uri: params.redirectUri,
-      scope: scopes.join(","),
       response_type: "code",
     });
+
+    if (params.configId) {
+      search.set("config_id", params.configId);
+    } else {
+      const scopes = params.scopes ?? [
+        "instagram_basic",
+        "instagram_content_publish",
+        "pages_show_list",
+        "pages_read_engagement",
+      ];
+      search.set("scope", scopes.join(","));
+    }
 
     if (params.state) {
       search.set("state", params.state);
@@ -360,40 +384,49 @@ export class InstagramGraphProvider {
   }
 
   /**
-   * Opus Clip uslubidagi Meta/Instagram OAuth dialogi havolasini yaratadi.
-   * Meta Business Unified Login (config_id) orqali to'g'ridan-to'g'ri Instagram rejimida ochiladi.
+   * Rasmiy Instagram OAuth dialogi havolasini yaratadi.
+   * Instagram API with Instagram Login (Business Login for Instagram) spetsifikatsiyasi bo'yicha:
+   * https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login
+   *
+   * Host: https://www.instagram.com/oauth/authorize
+   * Muhim parametrlar:
+   * - client_id: Instagram App ID
+   * - redirect_uri: Ro'yxatdan o'tgan aniq OAuth callback URL
+   * - response_type: "code"
+   * - scope: instagram_business_basic, instagram_business_content_publish, instagram_business_manage_comments, instagram_business_manage_messages
+   * - enable_fb_login: "0" (Facebook login muqobilini yashiradi, toza Instagram interfeysini ochadi)
+   * - force_authentication: "1" (avvalgi sessiyani chetlab o'tib, yangi kirishni talab qiladi)
    */
-  static buildInstagramOAuthUrl(params: {
-    appId: string;
-    configId?: string;
-    redirectUri: string;
-    state?: string;
-    scopes?: string[];
-  }): string {
+  static buildInstagramOAuthUrl(params: BuildInstagramOAuthUrlOptions): string {
     const search = new URLSearchParams({
       client_id: params.appId,
       redirect_uri: params.redirectUri,
       response_type: "code",
-      display: "popup",
     });
 
-    if (params.configId) {
-      search.set("config_id", params.configId);
-    } else {
-      const scopes = params.scopes ?? [
-        "instagram_basic",
-        "instagram_content_publish",
-        "pages_show_list",
-        "pages_read_engagement",
-      ];
-      search.set("scope", scopes.join(","));
-    }
+    const defaultScopes = [
+      "instagram_business_basic",
+      "instagram_business_content_publish",
+      "instagram_business_manage_comments",
+      "instagram_business_manage_messages",
+    ];
+    const scopes =
+      params.scopes && params.scopes.length > 0 ? params.scopes : defaultScopes;
+    search.set("scope", scopes.join(","));
 
     if (params.state) {
       search.set("state", params.state);
     }
 
-    return `https://www.facebook.com/v21.0/dialog/oauth?${search.toString()}`;
+    if (params.enableFbLogin === false || params.enableFbLogin === undefined) {
+      search.set("enable_fb_login", "0");
+    }
+
+    if (params.forceAuthentication !== false) {
+      search.set("force_authentication", "1");
+    }
+
+    return `https://www.instagram.com/oauth/authorize?${search.toString()}`;
   }
 
   /**
@@ -406,12 +439,15 @@ export class InstagramGraphProvider {
     appSecret: string;
     redirectUri: string;
   }): Promise<{ accessToken: string; userId: string }> {
+    // Instagram redirect paytida code oxiriga '#_' qo'shib yuboradi; uni tozalaymiz
+    const cleanCode = (params.code || "").replace(/#_$/, "").trim();
+
     const form = new URLSearchParams({
       client_id: params.appId,
       client_secret: params.appSecret,
       grant_type: "authorization_code",
       redirect_uri: params.redirectUri,
-      code: params.code,
+      code: cleanCode,
     });
 
     const res = await fetch("https://api.instagram.com/oauth/access_token", {
@@ -458,7 +494,8 @@ export class InstagramGraphProvider {
     const data = (await res.json()) as {
       access_token?: string;
       expires_in?: number;
-      error?: { message: string };
+      token_type?: string;
+      error?: { message: string; code?: number };
     };
 
     if (!res.ok || !data.access_token) {
@@ -470,45 +507,79 @@ export class InstagramGraphProvider {
 
     return {
       accessToken: data.access_token,
+      expiresIn: data.expires_in ?? 5184000, // 60 kun (sekundlarda)
+    };
+  }
+
+  /**
+   * Instagram 60 kunlik Long-Lived tokenni yangilaydi (kamida 24 soat o'tganidan so'ng).
+   * GET https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token
+   */
+  static async refreshInstagramLongLivedToken(params: {
+    accessToken: string;
+  }): Promise<{ accessToken: string; expiresIn: number }> {
+    const url = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${encodeURIComponent(
+      params.accessToken,
+    )}`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    const data = (await res.json()) as {
+      access_token?: string;
+      expires_in?: number;
+      token_type?: string;
+      error?: { message: string; code?: number };
+    };
+
+    if (!res.ok || !data.access_token) {
+      throw new IntegrationError(
+        data.error?.message || `Instagram Long-lived tokenni yangilashda xato (${res.status})`,
+        "meta",
+      );
+    }
+
+    return {
+      accessToken: data.access_token,
       expiresIn: data.expires_in ?? 5184000,
     };
   }
 
   /**
-   * Instagram foydalanuvchi ma'lumotlarini to'g'ridan-to'g'ri Graph API orqali oladi.
-   * GET https://graph.instagram.com/v21.0/me?fields=id,username,name,account_type
+   * Instagram Professional foydalanuvchi ma'lumotlarini to'g'ridan-to'g'ri Graph API orqali oladi.
+   * GET https://graph.instagram.com/v21.0/me?fields=id,user_id,username,name,account_type,profile_picture_url
    */
-  static async getInstagramProfile(accessToken: string): Promise<{
-    id: string;
-    username: string;
-    name?: string;
-    accountType?: string;
-  }> {
-    const url = `https://graph.instagram.com/v21.0/me?fields=id,username,name,account_type&access_token=${encodeURIComponent(
+  static async getInstagramProfile(accessToken: string): Promise<InstagramUserProfile> {
+    const url = `https://graph.instagram.com/v21.0/me?fields=id,user_id,username,name,account_type,profile_picture_url&access_token=${encodeURIComponent(
       accessToken,
     )}`;
 
     const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     const data = (await res.json()) as {
       id?: string;
+      user_id?: string;
       username?: string;
       name?: string;
       account_type?: string;
-      error?: { message: string };
+      profile_picture_url?: string;
+      error?: { message: string; code?: number };
     };
 
-    if (!res.ok || !data.id || !data.username) {
+    const finalId = data.id || data.user_id;
+
+    if (!res.ok || !finalId || !data.username) {
       throw new IntegrationError(
         data.error?.message || `Instagram profil ma'lumotlarini olishda xato (${res.status})`,
         "meta",
       );
     }
 
+    const rawType = (data.account_type || "").toUpperCase();
+
     return {
-      id: data.id,
+      id: finalId,
       username: data.username,
       name: data.name,
-      accountType: data.account_type,
+      accountType: rawType,
+      profilePictureUrl: data.profile_picture_url,
     };
   }
 }

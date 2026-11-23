@@ -394,6 +394,77 @@ export async function connectInstagramDirectAction(
 }
 
 /**
+ * Instagram akkauntini uzish (Disconnect) — TZ 4.6 & TZ 4.11.
+ * OauthToken'ni o'chiradi, kanal statusini 'setup' qiladi va sessiyani tozalaydi.
+ */
+export async function disconnectInstagramAction(
+  channelId?: string,
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    const session = await getCurrentSession();
+    if (!session) {
+      return { ok: false, message: "Avtorizatsiyadan o'tilmagan." };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const channel = await tx.channel.findFirst({
+        where: channelId
+          ? { id: channelId, userId: session.userId }
+          : { userId: session.userId },
+        include: { oauthToken: true },
+      });
+
+      if (!channel) {
+        throw new Error("Ulangan kanal topilmadi.");
+      }
+
+      if (channel.oauthToken) {
+        await tx.oauthToken.delete({
+          where: { id: channel.oauthToken.id },
+        });
+      }
+
+      await tx.channel.update({
+        where: { id: channel.id },
+        data: {
+          status: "setup",
+          handle: null,
+          igUserId: null,
+          fbPageId: null,
+        },
+      });
+
+      // Foydalanuvchida boshqa faol Instagram kanali bo'lmasa, apiCredential holatini yangilaymiz
+      const remainingActive = await tx.channel.count({
+        where: { userId: session.userId, status: "active", igUserId: { not: null } },
+      });
+
+      if (remainingActive === 0) {
+        await tx.apiCredential.updateMany({
+          where: { provider: { in: ["meta", "instagram_direct"] } },
+          data: { status: "unverified" },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          actor: session.email || "user",
+          action: "instagram.disconnected",
+          target: `channels/${channel.id}`,
+          details: { channelId: channel.id, handle: channel.handle },
+        },
+      });
+    });
+
+    refresh();
+    return { ok: true, message: "Instagram akkaunti muvaffaqiyatli uzildi." };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { ok: false, message: `Akkauntni uzishda xato: ${msg}` };
+  }
+}
+
+/**
  * Onboarding'ni yakunlaydi va tizimni to'liq avtomatik rejimga o'tkazadi.
  */
 export async function finishOnboardingAction(): Promise<{ ok: boolean; message: string }> {

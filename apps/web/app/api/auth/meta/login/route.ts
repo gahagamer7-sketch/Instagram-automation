@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     process.env.INSTAGRAM_CONFIG_ID ||
     "28915809191434271";
 
-  const oauthUrl = InstagramGraphProvider.buildInstagramOAuthUrl({
+  const oauthUrl = InstagramGraphProvider.buildOAuthUrl({
     appId,
     configId,
     redirectUri,
