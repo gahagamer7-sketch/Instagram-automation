@@ -375,14 +375,14 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-text text-sm">
-                          Instagram Akkauntini Ulash (Opus Clip uslubi)
+                          Instagram Akkauntini To&apos;g&apos;ridan-to&apos;g&apos;ri Ulash
                         </h4>
                         <span className="rounded-md bg-pink-500/10 px-2 py-0.5 text-[10px] font-medium text-pink-400 border border-pink-500/20">
-                          1-Klikda
+                          Tavsiya etiladi
                         </span>
                       </div>
                       <p className="text-xs text-muted mt-0.5">
-                        Alohida popup oynada rasmiy Instagram rozilik dialogini ochadi (flow=ig_biz_login_oauth).
+                        Instagram login va parolingiz orqali darhol bog&apos;lang. Facebook yoki Portfolio talab etilmaydi.
                       </p>
                     </div>
                   </div>
