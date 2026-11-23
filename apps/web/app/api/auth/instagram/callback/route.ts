@@ -148,29 +148,71 @@ export async function GET(request: NextRequest) {
     const origin = request.nextUrl.origin;
     const redirectUri = `${origin}/api/auth/instagram/callback`;
 
-    // 1. Qisqa muddatli tokenga almashtirish
-    const shortLived = await InstagramGraphProvider.exchangeInstagramCodeForToken({
-      code,
-      appId,
-      appSecret,
-      redirectUri,
-    });
+    let finalAccessToken: string;
+    let finalExpiresIn: number = 5184000;
+    let igUsername = "";
+    let igUserId = "";
+    let fbPageId: string | null = null;
 
-    // 2. 60 kunlik Long-Lived tokenga almashtirish
-    const longLived = await InstagramGraphProvider.exchangeInstagramLongLivedToken({
-      shortLivedToken: shortLived.accessToken,
-      appSecret,
-    });
+    // 1. Birinchi navbatda Meta Graph API orqali tokenga almashtirish (Meta Business App kodi)
+    try {
+      const shortLived = await InstagramGraphProvider.exchangeCodeForToken(
+        code,
+        appId,
+        appSecret,
+        redirectUri,
+      );
 
-    // 3. Foydalanuvchi profil ma'lumotlarini olish
-    const profile = await InstagramGraphProvider.getInstagramProfile(
-      longLived.accessToken,
-    );
+      const igShort = new InstagramGraphProvider(shortLived.accessToken);
+      const longLived = await igShort.exchangeLongLivedToken(appId, appSecret);
+      finalAccessToken = longLived.accessToken;
+      finalExpiresIn = longLived.expiresIn;
 
-    const encryptedToken = encrypt(longLived.accessToken, encKey);
-    const expiresAt = new Date(Date.now() + longLived.expiresIn * 1000);
+      const igLong = new InstagramGraphProvider(longLived.accessToken);
+      const check = await igLong.checkConnection();
 
-    // 4. Foydalanuvchining kanalini bazada yangilash
+      if (check.ok && check.accounts && check.accounts.length > 0) {
+        igUsername = check.accounts[0].igUsername;
+        igUserId = check.accounts[0].igUserId;
+        fbPageId = check.accounts[0].pageId;
+      } else {
+        // To'g'ridan-to'g'ri IG profil ma'lumotlarini tekshiramiz
+        const profile = await InstagramGraphProvider.getInstagramProfile(longLived.accessToken);
+        igUsername = profile.username;
+        igUserId = profile.id;
+        fbPageId = `ig_${profile.id}`;
+      }
+    } catch {
+      // 2. Agar to'g'ridan-to'g'ri Instagram endpoint kodi bo'lsa
+      const shortLived = await InstagramGraphProvider.exchangeInstagramCodeForToken({
+        code,
+        appId,
+        appSecret,
+        redirectUri,
+      });
+
+      const longLived = await InstagramGraphProvider.exchangeInstagramLongLivedToken({
+        shortLivedToken: shortLived.accessToken,
+        appSecret,
+      });
+
+      finalAccessToken = longLived.accessToken;
+      finalExpiresIn = longLived.expiresIn;
+
+      const profile = await InstagramGraphProvider.getInstagramProfile(longLived.accessToken);
+      igUsername = profile.username;
+      igUserId = profile.id;
+      fbPageId = `ig_${profile.id}`;
+    }
+
+    if (!igUsername || !igUserId) {
+      throw new Error("Instagram akkaunti ma'lumotlarini aniqlab bo'lmadi");
+    }
+
+    const encryptedToken = encrypt(finalAccessToken, encKey);
+    const expiresAt = new Date(Date.now() + finalExpiresIn * 1000);
+
+    // 3. Foydalanuvchining kanalini bazada yangilash
     const session = await getCurrentSession();
     const channelWhere = session ? { userId: session.userId } : {};
 
@@ -180,10 +222,10 @@ export async function GET(request: NextRequest) {
         channel = await tx.channel.create({
           data: {
             userId: session?.userId,
-            name: `@${profile.username}`,
-            handle: profile.username,
-            igUserId: profile.id,
-            fbPageId: `ig_${profile.id}`,
+            name: `@${igUsername}`,
+            handle: igUsername,
+            igUserId: igUserId,
+            fbPageId: fbPageId,
             status: "active",
           },
         });
@@ -191,10 +233,10 @@ export async function GET(request: NextRequest) {
         channel = await tx.channel.update({
           where: { id: channel.id },
           data: {
-            name: `@${profile.username}`,
-            handle: profile.username,
-            igUserId: profile.id,
-            fbPageId: channel.fbPageId || `ig_${profile.id}`,
+            name: `@${igUsername}`,
+            handle: igUsername,
+            igUserId: igUserId,
+            fbPageId: fbPageId || channel.fbPageId,
             status: "active",
           },
         });
@@ -207,16 +249,18 @@ export async function GET(request: NextRequest) {
           accessToken: encryptedToken,
           expiresAt,
           scopes: [
-            "instagram_business_basic",
-            "instagram_business_content_publish",
+            "instagram_basic",
+            "instagram_content_publish",
+            "pages_show_list",
           ],
         },
         update: {
           accessToken: encryptedToken,
           expiresAt,
           scopes: [
-            "instagram_business_basic",
-            "instagram_business_content_publish",
+            "instagram_basic",
+            "instagram_content_publish",
+            "pages_show_list",
           ],
         },
       });
@@ -226,13 +270,13 @@ export async function GET(request: NextRequest) {
         create: {
           provider: "meta",
           encryptedKey: encryptedToken,
-          last4: profile.username.slice(-4),
+          last4: igUsername.slice(-4),
           status: "connected",
           lastCheckedAt: new Date(),
         },
         update: {
           encryptedKey: encryptedToken,
-          last4: profile.username.slice(-4),
+          last4: igUsername.slice(-4),
           status: "connected",
           lastCheckedAt: new Date(),
           lastError: null,
@@ -245,9 +289,9 @@ export async function GET(request: NextRequest) {
           action: "instagram.connected",
           target: `channels/${channel.id}`,
           details: {
-            igUserId: profile.id,
-            handle: profile.username,
-            mode: "instagram_business_login",
+            igUserId: igUserId,
+            handle: igUsername,
+            mode: "instagram_unified_login",
             expiresAt: expiresAt.toISOString(),
           },
         },
@@ -257,8 +301,8 @@ export async function GET(request: NextRequest) {
     if (isPopup) {
       const response = renderPopupResult({
         ok: true,
-        handle: profile.username,
-        igUserId: profile.id,
+        handle: igUsername,
+        igUserId: igUserId,
         from,
       });
       response.cookies.delete("instagram_oauth_state");
@@ -266,7 +310,7 @@ export async function GET(request: NextRequest) {
     }
 
     redirectUrl.searchParams.set("meta_success", "1");
-    redirectUrl.searchParams.set("handle", profile.username);
+    redirectUrl.searchParams.set("handle", igUsername);
 
     const response = NextResponse.redirect(redirectUrl);
     response.cookies.delete("instagram_oauth_state");
@@ -280,3 +324,4 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 }
+

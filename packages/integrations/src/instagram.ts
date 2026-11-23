@@ -360,8 +360,8 @@ export class InstagramGraphProvider {
   }
 
   /**
-   * Opus Clip uslubidagi "Instagram Login for Business" OAuth havolasini yaratadi.
-   * Direct Instagram Login dialogi: flow=ig_biz_login_oauth
+   * Opus Clip uslubidagi Meta/Instagram OAuth dialogi havolasini yaratadi.
+   * Meta Business App'lar uchun rasmiy dialog/oauth endpointi ishlatiladi.
    */
   static buildInstagramOAuthUrl(params: {
     appId: string;
@@ -370,24 +370,25 @@ export class InstagramGraphProvider {
     scopes?: string[];
   }): string {
     const scopes = params.scopes ?? [
-      "instagram_business_basic",
-      "instagram_business_content_publish",
+      "instagram_basic",
+      "instagram_content_publish",
+      "pages_show_list",
+      "pages_read_engagement",
     ];
 
     const search = new URLSearchParams({
-      enable_fb_login: "0",
-      force_authentication: "1",
       client_id: params.appId,
       redirect_uri: params.redirectUri,
       response_type: "code",
       scope: scopes.join(","),
+      display: "popup",
     });
 
     if (params.state) {
       search.set("state", params.state);
     }
 
-    return `https://www.instagram.com/oauth/authorize?${search.toString()}`;
+    return `https://www.facebook.com/v21.0/dialog/oauth?${search.toString()}`;
   }
 
   /**

@@ -33,13 +33,12 @@ describe("InstagramGraphProvider", () => {
       state: "state-direct-ig",
     });
 
-    expect(url).toContain("https://www.instagram.com/oauth/authorize?");
+    expect(url).toContain("https://www.facebook.com/v21.0/dialog/oauth?");
     expect(url).toContain("client_id=987654321");
     expect(url).toContain("redirect_uri=https%3A%2F%2Fexample.com%2Fapi%2Fauth%2Finstagram%2Fcallback");
     expect(url).toContain("state=state-direct-ig");
-    expect(url).toContain("instagram_business_basic");
-    expect(url).toContain("instagram_business_content_publish");
-    expect(url).toContain("enable_fb_login=0");
+    expect(url).toContain("instagram_content_publish");
+    expect(url).toContain("display=popup");
   });
 });
 
