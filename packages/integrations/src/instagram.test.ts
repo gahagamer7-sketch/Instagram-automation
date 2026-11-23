@@ -40,5 +40,17 @@ describe("InstagramGraphProvider", () => {
     expect(url).toContain("instagram_content_publish");
     expect(url).toContain("display=popup");
   });
+
+  it("buildInstagramOAuthUrl config_id bilan to'g'ri URL yaratadi", () => {
+    const url = InstagramGraphProvider.buildInstagramOAuthUrl({
+      appId: "987654321",
+      configId: "28915809191434271",
+      redirectUri: "https://example.com/api/auth/instagram/callback",
+      state: "state-config",
+    });
+
+    expect(url).toContain("config_id=28915809191434271");
+    expect(url).toContain("display=popup");
+  });
 });
 

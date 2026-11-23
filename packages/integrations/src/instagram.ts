@@ -361,28 +361,33 @@ export class InstagramGraphProvider {
 
   /**
    * Opus Clip uslubidagi Meta/Instagram OAuth dialogi havolasini yaratadi.
-   * Meta Business App'lar uchun rasmiy dialog/oauth endpointi ishlatiladi.
+   * Meta Business Unified Login (config_id) orqali to'g'ridan-to'g'ri Instagram rejimida ochiladi.
    */
   static buildInstagramOAuthUrl(params: {
     appId: string;
+    configId?: string;
     redirectUri: string;
     state?: string;
     scopes?: string[];
   }): string {
-    const scopes = params.scopes ?? [
-      "instagram_basic",
-      "instagram_content_publish",
-      "pages_show_list",
-      "pages_read_engagement",
-    ];
-
     const search = new URLSearchParams({
       client_id: params.appId,
       redirect_uri: params.redirectUri,
       response_type: "code",
-      scope: scopes.join(","),
       display: "popup",
     });
+
+    if (params.configId) {
+      search.set("config_id", params.configId);
+    } else {
+      const scopes = params.scopes ?? [
+        "instagram_basic",
+        "instagram_content_publish",
+        "pages_show_list",
+        "pages_read_engagement",
+      ];
+      search.set("scope", scopes.join(","));
+    }
 
     if (params.state) {
       search.set("state", params.state);

@@ -48,8 +48,14 @@ export async function GET(request: NextRequest) {
     }),
   ).toString("base64url");
 
-  const oauthUrl = InstagramGraphProvider.buildOAuthUrl({
+  const configId =
+    process.env.META_CONFIG_ID ||
+    process.env.INSTAGRAM_CONFIG_ID ||
+    "28915809191434271";
+
+  const oauthUrl = InstagramGraphProvider.buildInstagramOAuthUrl({
     appId,
+    configId,
     redirectUri,
     state,
   });
