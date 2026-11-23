@@ -304,10 +304,10 @@ export function InstagramConnectModal({
               </div>
               <div>
                 <h3 className="font-semibold text-white text-sm">
-                  Instagram API with Instagram Login
+                  Instagram API (Unified Login)
                 </h3>
                 <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
-                  Tugmani bosganda rasmiy Instagram rozilik oynasi ochiladi. Hech qanday Facebook sahifa talab etilmaydi.
+                  Meta rasmiy oynasi orqali Instagram Professional (Business yoki Creator) akkauntingizni ulang.
                 </p>
               </div>
 

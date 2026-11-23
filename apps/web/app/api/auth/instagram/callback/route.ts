@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@autochannel/db";
 import { encrypt } from "@autochannel/crypto";
 import { InstagramGraphProvider } from "@autochannel/integrations";
+import { getMetaUnifiedLoginConfig } from "@/lib/meta-config";
 import { getCurrentSession } from "@/lib/session";
 
 function renderPopupResult(data: {
@@ -122,78 +123,96 @@ export async function GET(request: NextRequest) {
 
   const redirectUrl = new URL(from, request.url);
 
-  // 1. Foydalanuvchi kirishni bekor qilganda yoki xatolik yuz berganda
+  // 1. Foydalanuvchi kirishni bekor qilganda yoki Meta xatolik berganda
   if (error || !code) {
     const errorMsg =
       errorDescription || errorReason || error || "Instagram orqali kirish bekor qilindi";
     if (isPopup) {
-      return renderPopupResult({ ok: false, error: errorMsg, from });
+      const res = renderPopupResult({ ok: false, error: errorMsg, from });
+      res.cookies.delete("instagram_oauth_state");
+      return res;
     }
     redirectUrl.searchParams.set("instagram_error", errorMsg);
-    return NextResponse.redirect(redirectUrl);
+    const res = NextResponse.redirect(redirectUrl);
+    res.cookies.delete("instagram_oauth_state");
+    return res;
   }
 
   // 2. CSRF tekshiruvi (state va cookie mos kelishi shart)
   if (!cookieCsrf || !stateCsrf || cookieCsrf !== stateCsrf) {
     const errorMsg = "Xavfsizlik tekshiruvi muvaffaqiyatsiz (CSRF mos kelmadi). Qaytadan urinib ko'ring.";
     if (isPopup) {
-      return renderPopupResult({ ok: false, error: errorMsg, from });
+      const res = renderPopupResult({ ok: false, error: errorMsg, from });
+      res.cookies.delete("instagram_oauth_state");
+      return res;
     }
     redirectUrl.searchParams.set("instagram_error", errorMsg);
-    return NextResponse.redirect(redirectUrl);
+    const res = NextResponse.redirect(redirectUrl);
+    res.cookies.delete("instagram_oauth_state");
+    return res;
   }
 
-  const appId = process.env.INSTAGRAM_APP_ID || process.env.META_APP_ID;
-  const appSecret = process.env.INSTAGRAM_APP_SECRET || process.env.META_APP_SECRET;
+  const origin = request.nextUrl.origin;
+  let config;
+  try {
+    config = getMetaUnifiedLoginConfig(origin);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    if (isPopup) {
+      const res = renderPopupResult({ ok: false, error: errorMsg, from });
+      res.cookies.delete("instagram_oauth_state");
+      return res;
+    }
+    redirectUrl.searchParams.set("instagram_error", errorMsg);
+    const res = NextResponse.redirect(redirectUrl);
+    res.cookies.delete("instagram_oauth_state");
+    return res;
+  }
+
   const encKey =
     process.env.ENCRYPTION_KEY ||
     "e8f4c291a7b3d5e60123456789abcdef0123456789abcdef0123456789abcdef";
 
-  if (!appId || !appSecret) {
-    const errorMsg = "Serverda Instagram App ID yoki App Secret sozlanmagan";
-    if (isPopup) {
-      return renderPopupResult({ ok: false, error: errorMsg, from });
-    }
-    redirectUrl.searchParams.set("instagram_error", errorMsg);
-    return NextResponse.redirect(redirectUrl);
-  }
-
   try {
-    const origin = request.nextUrl.origin;
-    const redirectUri = `${origin}/api/auth/instagram/callback`;
+    const redirectUri = config.redirectUri || `${origin}/api/auth/instagram/callback`;
 
-    // 3. Authorization Code ni Access Tokenga almashtirish (POST https://api.instagram.com/oauth/access_token)
-    const shortLived = await InstagramGraphProvider.exchangeInstagramCodeForToken({
-      code,
-      appId,
-      appSecret,
+    // 3. Authorization Code ni tozalash va Meta server-to-server orqali Access Tokenga almashtirish
+    // (GET https://graph.facebook.com/{apiVersion}/oauth/access_token)
+    const cleanCode = code.replace(/#_$/, "").trim();
+    const tokenData = await InstagramGraphProvider.exchangeUnifiedLoginCodeForToken({
+      code: cleanCode,
+      appId: config.appId,
+      appSecret: config.appSecret,
       redirectUri,
+      apiVersion: config.apiVersion,
     });
 
-    // 4. Qisqa muddatli tokenni 60 kunlik Long-Lived tokenga almashtirish (GET https://graph.instagram.com/access_token)
-    const longLived = await InstagramGraphProvider.exchangeInstagramLongLivedToken({
-      shortLivedToken: shortLived.accessToken,
-      appSecret,
+    // 4. Tokenni 60 kunlik Long-Lived tokenga almashtirish / tekshirish
+    // (GET https://graph.facebook.com/{apiVersion}/oauth/access_token?grant_type=fb_exchange_token)
+    const longLived = await InstagramGraphProvider.exchangeUnifiedLoginLongLivedToken({
+      accessToken: tokenData.accessToken,
+      appId: config.appId,
+      appSecret: config.appSecret,
+      apiVersion: config.apiVersion,
     });
 
-    // 5. Instagram Graph API orqali professional profil ma'lumotlarini olish (GET https://graph.instagram.com/v21.0/me)
-    const profile = await InstagramGraphProvider.getInstagramProfile(longLived.accessToken);
+    // 5. Meta Unified Login orqali foydalanuvchining Instagram Business / Creator akkauntlarini aniqlash
+    // (/me/assigned_instagram_accounts, /me/accounts, /debug_token)
+    const discoveredAccounts = await InstagramGraphProvider.discoverUnifiedLoginInstagramAccounts({
+      accessToken: longLived.accessToken,
+      appId: config.appId,
+      appSecret: config.appSecret,
+      apiVersion: config.apiVersion,
+    });
 
-    if (!profile.id || !profile.username) {
-      throw new Error("Instagram akkaunti ma'lumotlarini aniqlab bo'lmadi");
-    }
-
-    // Professional (Business yoki Creator) hisob ekanligini tekshirish
-    if (
-      profile.accountType &&
-      profile.accountType !== "BUSINESS" &&
-      profile.accountType !== "MEDIA_CREATOR" &&
-      profile.accountType !== "CREATOR"
-    ) {
+    if (discoveredAccounts.length === 0) {
       throw new Error(
-        `Instagram akkaunti turi: ${profile.accountType}. Avtomatlashtirish uchun akkauntingiz Instagram ilovasida Professional (Business yoki Creator) holatiga o'tkazilgan bo'lishi kerak.`
+        "Meta dialogida hech qanday Instagram professional akkaunti tanlanmadi yoki ruxsat berilmadi. Iltimos, Meta oynasidagi Instagram Professional (Creator yoki Business) akkauntingizni tanlab qayta ruxsat bering."
       );
     }
+
+    // Birinchi tanlangan Instagram akkauntini olamiz
+    const selectedAccount = discoveredAccounts[0];
 
     const encryptedToken = encrypt(longLived.accessToken, encKey);
     const expiresAt = new Date(Date.now() + longLived.expiresIn * 1000);
@@ -207,7 +226,7 @@ export async function GET(request: NextRequest) {
     await prisma.$transaction(async (tx) => {
       // Bir xil igUserId bo'yicha boshqa foydalanuvchining kanali bo'lsa uni bo'shatamiz
       const existingOther = await tx.channel.findFirst({
-        where: { igUserId: profile.id, NOT: { userId: session.userId } },
+        where: { igUserId: selectedAccount.id, NOT: { userId: session.userId } },
       });
       if (existingOther) {
         await tx.channel.update({
@@ -220,14 +239,17 @@ export async function GET(request: NextRequest) {
         where: { userId: session.userId },
       });
 
+      const channelName = selectedAccount.name || `@${selectedAccount.username}`;
+      const pageId = selectedAccount.pageId || `ig_${selectedAccount.id}`;
+
       if (!channel) {
         channel = await tx.channel.create({
           data: {
             userId: session.userId,
-            name: profile.name || `@${profile.username}`,
-            handle: profile.username,
-            igUserId: profile.id,
-            fbPageId: `ig_${profile.id}`,
+            name: channelName,
+            handle: selectedAccount.username,
+            igUserId: selectedAccount.id,
+            fbPageId: pageId,
             status: "active",
           },
         });
@@ -235,10 +257,10 @@ export async function GET(request: NextRequest) {
         channel = await tx.channel.update({
           where: { id: channel.id },
           data: {
-            name: profile.name || `@${profile.username}`,
-            handle: profile.username,
-            igUserId: profile.id,
-            fbPageId: `ig_${profile.id}`,
+            name: channelName,
+            handle: selectedAccount.username,
+            igUserId: selectedAccount.id,
+            fbPageId: pageId,
             status: "active",
           },
         });
@@ -251,20 +273,20 @@ export async function GET(request: NextRequest) {
           accessToken: encryptedToken,
           expiresAt,
           scopes: [
-            "instagram_business_basic",
-            "instagram_business_content_publish",
-            "instagram_business_manage_comments",
-            "instagram_business_manage_messages",
+            "instagram_basic",
+            "instagram_content_publish",
+            "instagram_manage_comments",
+            "instagram_manage_messages",
           ],
         },
         update: {
           accessToken: encryptedToken,
           expiresAt,
           scopes: [
-            "instagram_business_basic",
-            "instagram_business_content_publish",
-            "instagram_business_manage_comments",
-            "instagram_business_manage_messages",
+            "instagram_basic",
+            "instagram_content_publish",
+            "instagram_manage_comments",
+            "instagram_manage_messages",
           ],
         },
       });
@@ -274,13 +296,13 @@ export async function GET(request: NextRequest) {
         create: {
           provider: "meta",
           encryptedKey: encryptedToken,
-          last4: profile.username.slice(-4),
+          last4: selectedAccount.username.slice(-4),
           status: "connected",
           lastCheckedAt: new Date(),
         },
         update: {
           encryptedKey: encryptedToken,
-          last4: profile.username.slice(-4),
+          last4: selectedAccount.username.slice(-4),
           status: "connected",
           lastCheckedAt: new Date(),
           lastError: null,
@@ -289,13 +311,13 @@ export async function GET(request: NextRequest) {
 
       await tx.auditLog.create({
         data: {
-          actor: session.email || "oauth.instagram",
+          actor: session.email || "oauth.instagram_unified",
           action: "instagram.oauth_connected",
           target: `channels/${channel.id}`,
           details: {
-            igUserId: profile.id,
-            handle: profile.username,
-            accountType: profile.accountType,
+            igUserId: selectedAccount.id,
+            handle: selectedAccount.username,
+            discoverySource: selectedAccount.discoverySource,
             expiresAt: expiresAt.toISOString(),
           },
         },
@@ -305,15 +327,15 @@ export async function GET(request: NextRequest) {
     const response = isPopup
       ? renderPopupResult({
           ok: true,
-          handle: profile.username,
-          igUserId: profile.id,
-          profilePictureUrl: profile.profilePictureUrl,
-          accountType: profile.accountType,
+          handle: selectedAccount.username,
+          igUserId: selectedAccount.id,
+          profilePictureUrl: selectedAccount.profilePictureUrl,
+          accountType: "Professional (Unified Login)",
           from,
         })
       : NextResponse.redirect(
           `${from}${from.includes("?") ? "&" : "?"}instagram_connected=1&handle=${encodeURIComponent(
-            profile.username,
+            selectedAccount.username,
           )}`,
         );
 
@@ -323,7 +345,9 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     if (isPopup) {
-      return renderPopupResult({ ok: false, error: errorMsg, from });
+      const res = renderPopupResult({ ok: false, error: errorMsg, from });
+      res.cookies.delete("instagram_oauth_state");
+      return res;
     }
     redirectUrl.searchParams.set("instagram_error", errorMsg);
     const response = NextResponse.redirect(redirectUrl);

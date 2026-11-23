@@ -97,6 +97,135 @@ describe("InstagramGraphProvider", () => {
     expect(res.expiresIn).toBe(5184000);
   });
 
+  it("buildUnifiedLoginOAuthUrl to'g'ri Meta Unified Login havolasini yaratadi (scope uzatilmaydi)", () => {
+    const url = InstagramGraphProvider.buildUnifiedLoginOAuthUrl({
+      appId: "1174196955097298",
+      configId: "28915809191434271",
+      redirectUri: "https://example.com/api/auth/instagram/callback",
+      state: "csrf-state-999",
+      apiVersion: "v21.0",
+      overrideDefaultResponseType: true,
+    });
+
+    expect(url.startsWith("https://www.facebook.com/v21.0/dialog/oauth?")).toBe(true);
+    expect(url).toContain("client_id=1174196955097298");
+    expect(url).toContain("config_id=28915809191434271");
+    expect(url).toContain("response_type=code");
+    expect(url).toContain("override_default_response_type=true");
+    expect(url).toContain("state=csrf-state-999");
+    // Unified Login'da config_id bo'lgani uchun scope parametri umuman uzatilmasligi shart
+    expect(url).not.toContain("scope=");
+  });
+
+  it("exchangeUnifiedLoginCodeForToken Meta serveridan token oladi", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "EAAP_system_user_token_123",
+        token_type: "bearer",
+        expires_in: 5184000,
+      }),
+    });
+
+    const res = await InstagramGraphProvider.exchangeUnifiedLoginCodeForToken({
+      code: "AQ_auth_code_123#_",
+      appId: "1174196955097298",
+      appSecret: "secret_123",
+      redirectUri: "https://example.com/api/auth/instagram/callback",
+      apiVersion: "v21.0",
+    });
+
+    expect(res.accessToken).toBe("EAAP_system_user_token_123");
+    expect(res.tokenType).toBe("bearer");
+    expect(res.expiresIn).toBe(5184000);
+  });
+
+  it("discoverUnifiedLoginInstagramAccounts assigned_instagram_accounts orqali hisoblarni aniqlaydi", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [
+          {
+            id: "1784140009999",
+            username: "unified_brand_uz",
+            name: "Unified Brand",
+            profile_picture_url: "https://cdn.fb.com/pic.jpg",
+          },
+        ],
+      }),
+    });
+
+    const accounts = await InstagramGraphProvider.discoverUnifiedLoginInstagramAccounts({
+      accessToken: "EAAP_token",
+      apiVersion: "v21.0",
+    });
+
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0].id).toBe("1784140009999");
+    expect(accounts[0].username).toBe("unified_brand_uz");
+    expect(accounts[0].discoverySource).toBe("assigned_accounts");
+  });
+
+  it("discoverUnifiedLoginInstagramAccounts Facebook Page orqali bog'langan hisobni aniqlaydi", async () => {
+    let callCount = 0;
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      callCount++;
+      if (url.includes("/me/assigned_instagram_accounts")) {
+        return {
+          ok: true,
+          json: async () => ({ data: [] }), // bo'sh
+        };
+      }
+      if (url.includes("/me/accounts")) {
+        return {
+          ok: true,
+          json: async () => ({
+            data: [
+              {
+                id: "page_123",
+                name: "Biznes Sahifa",
+                instagram_business_account: {
+                  id: "1784140008888",
+                  username: "page_connected_ig",
+                  name: "Page IG",
+                  profile_picture_url: "https://cdn.fb.com/page_ig.jpg",
+                },
+              },
+            ],
+          }),
+        };
+      }
+      return { ok: false, json: async () => ({}) };
+    });
+
+    const accounts = await InstagramGraphProvider.discoverUnifiedLoginInstagramAccounts({
+      accessToken: "EAAP_page_token",
+      apiVersion: "v21.0",
+    });
+
+    expect(accounts).toHaveLength(1);
+    expect(accounts[0].id).toBe("1784140008888");
+    expect(accounts[0].username).toBe("page_connected_ig");
+    expect(accounts[0].pageId).toBe("page_123");
+    expect(accounts[0].discoverySource).toBe("page_linked");
+  });
+
+  it("exchangeUnifiedLoginLongLivedToken xato berganda original tokenni qaytaradi", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: { message: "Already long lived" } }),
+    });
+
+    const res = await InstagramGraphProvider.exchangeUnifiedLoginLongLivedToken({
+      accessToken: "original_suat_token",
+      appId: "app_123",
+      appSecret: "sec_123",
+    });
+
+    expect(res.accessToken).toBe("original_suat_token");
+    expect(res.expiresIn).toBe(5184000);
+  });
+
   it("getInstagramProfile profil ma'lumotlarini to'g'ri qaytaradi", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

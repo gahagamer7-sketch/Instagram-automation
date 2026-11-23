@@ -1,13 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { InstagramGraphProvider } from "@autochannel/integrations";
+import { getMetaUnifiedLoginConfig } from "@/lib/meta-config";
 import crypto from "node:crypto";
 
 export async function GET(request: NextRequest) {
-  const appId = process.env.INSTAGRAM_APP_ID || process.env.META_APP_ID;
   const from = request.nextUrl.searchParams.get("from") || "/onboarding?step=4";
   const isPopup = request.nextUrl.searchParams.get("popup") === "1";
+  const origin = request.nextUrl.origin;
 
-  if (!appId) {
+  let config;
+  try {
+    config = getMetaUnifiedLoginConfig(origin);
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
     if (isPopup) {
       const html = `
         <!DOCTYPE html>
@@ -17,15 +22,15 @@ export async function GET(request: NextRequest) {
               if (window.opener) {
                 window.opener.postMessage({
                   type: 'INSTAGRAM_ERROR',
-                  error: 'missing_app_id',
-                  message: 'INSTAGRAM_APP_ID sozlanmagan. Iltimos, Meta App Dashboard orqali Instagram App ID kiriting.'
+                  error: 'missing_config',
+                  message: ${JSON.stringify(errorMsg)}
                 }, '*');
                 window.close();
               } else {
-                window.location.href = '${from}${from.includes("?") ? "&" : "?"}instagram_error=missing_app_id';
+                window.location.href = '${from}${from.includes("?") ? "&" : "?"}instagram_error=' + encodeURIComponent(${JSON.stringify(errorMsg)});
               }
             </script>
-            <p>Instagram App ID sozlanmagan...</p>
+            <p>${errorMsg}</p>
           </body>
         </html>
       `;
@@ -35,12 +40,9 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(from, request.url);
-    url.searchParams.set("instagram_error", "missing_app_id");
+    url.searchParams.set("instagram_error", errorMsg);
     return NextResponse.redirect(url);
   }
-
-  const origin = request.nextUrl.origin;
-  const redirectUri = `${origin}/api/auth/instagram/callback`;
 
   // CSRF himoyasi: 32 baytli kriptografik tasodifiy token
   const csrfToken = crypto.randomBytes(32).toString("hex");
@@ -54,20 +56,16 @@ export async function GET(request: NextRequest) {
 
   const state = Buffer.from(JSON.stringify(statePayload)).toString("base64url");
 
-  // Rasmiy native Instagram OAuth URL:
-  // https://www.instagram.com/oauth/authorize
-  const oauthUrl = InstagramGraphProvider.buildInstagramOAuthUrl({
-    appId,
-    redirectUri,
+  // Meta Unified Login (Facebook Login for Business):
+  // https://www.facebook.com/{GRAPH_API_VERSION}/dialog/oauth
+  // Parametrlar: client_id, config_id, redirect_uri, response_type=code, override_default_response_type=true, state
+  const oauthUrl = InstagramGraphProvider.buildUnifiedLoginOAuthUrl({
+    appId: config.appId,
+    configId: config.configId,
+    redirectUri: config.redirectUri || `${origin}/api/auth/instagram/callback`,
+    apiVersion: config.apiVersion,
+    overrideDefaultResponseType: true,
     state,
-    scopes: [
-      "instagram_business_basic",
-      "instagram_business_content_publish",
-      "instagram_business_manage_comments",
-      "instagram_business_manage_messages",
-    ],
-    enableFbLogin: false, // Facebook login muqobilini ko'rsatmaslik
-    forceAuthentication: true, // Instagram kirish oynasini majburiy chiqarish
   });
 
   const response = NextResponse.redirect(oauthUrl);
