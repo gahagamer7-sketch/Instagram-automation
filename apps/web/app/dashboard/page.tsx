@@ -9,6 +9,7 @@ import { getDashboardData } from "@/lib/dashboard";
 import { formatDateTime, formatNumber, formatUsd } from "@/lib/format";
 import { getSystemSnapshot } from "@/lib/system";
 import { getCurrentUser } from "@/lib/session";
+import { ConnectedAccountsCard } from "@/components/dashboard/connected-accounts-card";
 
 function InstagramIcon({ className }: { className?: string }) {
   return (
@@ -61,6 +62,10 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
+          {/* OpusClip-style Connected Instagram Accounts section */}
+          <Suspense fallback={<CardSkeleton lines={4} />}>
+            <ConnectedAccountsSection />
+          </Suspense>
           <Suspense fallback={<CardSkeleton lines={5} />}>
             <SetupChecklist />
           </Suspense>
@@ -74,6 +79,22 @@ export default function DashboardPage() {
       </div>
     </>
   );
+}
+
+async function ConnectedAccountsSection() {
+  const currentUser = await getCurrentUser();
+  const channels = (currentUser?.channels || []).map((c) => ({
+    id: c.id,
+    name: c.name,
+    handle: c.handle,
+    igUserId: c.igUserId,
+    profilePictureUrl: c.profilePictureUrl,
+    accountType: c.accountType,
+    status: c.status,
+    createdAt: c.createdAt.toISOString(),
+  }));
+
+  return <ConnectedAccountsCard channels={channels} />;
 }
 
 async function DashboardHeader() {

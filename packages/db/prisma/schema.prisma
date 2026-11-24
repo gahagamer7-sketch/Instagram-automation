@@ -36,6 +36,8 @@ model Channel {
   handle     String?
   igUserId   String?       @unique
   fbPageId   String?
+  profilePictureUrl String?
+  accountType       String?
   niche      String?
   language   String        @default("uz")
   status     ChannelStatus @default(setup)

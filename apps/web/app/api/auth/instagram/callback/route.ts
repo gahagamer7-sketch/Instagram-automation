@@ -235,14 +235,25 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      // 1. Foydalanuvchining ayni shu Instagram ID'li kanali bormi?
       let channel = await tx.channel.findFirst({
-        where: { userId: session.userId },
+        where: { userId: session.userId, igUserId: selectedAccount.id },
       });
+
+      // 2. Agar yo'q bo'lsa, foydalanuvchining hali bog'lanmagan (boshlang'ich) kanali bormi?
+      if (!channel) {
+        channel = await tx.channel.findFirst({
+          where: { userId: session.userId, igUserId: null },
+        });
+      }
 
       const channelName = selectedAccount.name || `@${selectedAccount.username}`;
       const pageId = selectedAccount.pageId || `ig_${selectedAccount.id}`;
+      const profilePic = selectedAccount.profilePictureUrl || null;
+      const accountType = "Professional (Creator / Business)";
 
       if (!channel) {
+        // Yangi qo'shimcha kanal yaratamiz (OpusClip uslubida ko'p akkauntli boshqaruv)
         channel = await tx.channel.create({
           data: {
             userId: session.userId,
@@ -250,6 +261,8 @@ export async function GET(request: NextRequest) {
             handle: selectedAccount.username,
             igUserId: selectedAccount.id,
             fbPageId: pageId,
+            profilePictureUrl: profilePic,
+            accountType,
             status: "active",
           },
         });
@@ -261,6 +274,8 @@ export async function GET(request: NextRequest) {
             handle: selectedAccount.username,
             igUserId: selectedAccount.id,
             fbPageId: pageId,
+            profilePictureUrl: profilePic,
+            accountType,
             status: "active",
           },
         });

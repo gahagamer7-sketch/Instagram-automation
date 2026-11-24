@@ -8,12 +8,13 @@ import {
   Check,
   AlertCircle,
   Loader2,
-  Sparkles,
   ChevronRight,
   LogOut,
   RefreshCw,
-  ExternalLink,
   ShieldCheck,
+  HelpCircle,
+  Info,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -49,6 +50,7 @@ function InstagramIcon({ className = "w-5 h-5" }: { className?: string }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
+      aria-hidden="true"
     >
       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
@@ -63,14 +65,12 @@ export function InstagramConnectModal({
   onSuccess,
   connectedAccount,
   onDisconnect,
-  onSmartConnect,
-  isSmartConnecting,
 }: InstagramConnectModalProps) {
   const [loadingMode, setLoadingMode] = useState<"instagram" | "facebook" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [smartHandle, setSmartHandle] = useState("");
+  const [showHowToSwitch, setShowHowToSwitch] = useState(false);
+  const [showFacebookOption, setShowFacebookOption] = useState(false);
 
   // Listen for popup postMessage events
   useEffect(() => {
@@ -102,13 +102,13 @@ export function InstagramConnectModal({
 
   if (!isOpen) return null;
 
-  // Rasmiy native Instagram OAuth popup
+  // Rasmiy Meta Unified Login (Facebook Login for Business config_id bilan)
   const handleOpenInstagramOAuth = () => {
     setError(null);
     setLoadingMode("instagram");
 
-    const width = 560;
-    const height = 740;
+    const width = 580;
+    const height = 750;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
 
@@ -120,10 +120,11 @@ export function InstagramConnectModal({
 
     if (!popup || popup.closed || typeof popup.closed === "undefined") {
       setLoadingMode(null);
-      setError("Brauzer qalqib chiquvchi oynani blokladi. Iltimos, bu sayt uchun ruxsat bering.");
+      setError("Brauzer qalqib chiquvchi oynani blokladi. Iltimos, ushbu sayt uchun ruxsat bering.");
     }
   };
 
+  // Muqobil: Facebook Page orqali bog'lash (Meta OAuth)
   const handleOpenFacebookPopup = () => {
     setError(null);
     setLoadingMode("facebook");
@@ -164,7 +165,7 @@ export function InstagramConnectModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#121318] p-6 text-white shadow-2xl shadow-black/90 animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-lg rounded-3xl border border-white/10 bg-[#121318] p-6 sm:p-7 text-white shadow-2xl shadow-black/90 animate-in zoom-in-95 duration-200 max-h-[92vh] overflow-y-auto"
         role="dialog"
         aria-modal="true"
       >
@@ -172,46 +173,47 @@ export function InstagramConnectModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition"
+          className="absolute top-5 right-5 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-neutral-400 hover:bg-white/10 hover:text-white transition"
+          aria-label="Yopish"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Header Branding */}
-        <div className="flex items-center justify-center gap-3 pt-1 pb-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-md">
-            <span className="font-black text-white text-lg tracking-tighter">AC</span>
+        <div className="flex items-center justify-center gap-3 pt-2 pb-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-md">
+            <span className="font-black text-white text-xl tracking-tighter">AC</span>
           </div>
 
           <ArrowLeftRight className="h-4 w-4 text-neutral-400" />
 
           {/* Instagram Gradient Logo */}
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] shadow-md p-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] shadow-lg shadow-pink-500/20 p-2.5">
             <InstagramIcon className="w-full h-full text-white" />
           </div>
         </div>
 
-        {/* Title */}
-        <div className="text-center mb-5">
+        {/* Title & Description */}
+        <div className="text-center mt-3 mb-6">
           <h2 className="text-xl font-bold tracking-tight text-white">
             {isConnected ? "Instagram Akkaunti Ulangan" : "Connect Instagram"}
           </h2>
-          <p className="text-xs text-neutral-400 mt-1">
+          <p className="text-xs text-neutral-400 mt-1.5 max-w-sm mx-auto leading-relaxed">
             {isConnected
               ? "Reels avtomatik nashr qilish va kontent rejalashtirish uchun faol"
-              : "Rasmiy Instagram OAuth orqali Professional (Creator / Business) akkauntingizni ulang"}
+              : "AI orqali Reels yaratish, nashr qilish va analitika uchun Instagram akkauntingizni ulang"}
           </p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-950/40 p-3.5 text-xs text-red-200 flex items-start gap-2.5">
+          <div className="mb-5 rounded-2xl border border-red-500/30 bg-red-950/40 p-4 text-xs text-red-200 flex items-start gap-3">
             <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
             <div className="flex-1 space-y-1">
               <p className="font-medium">{error}</p>
-              {error.toLowerCase().includes("invalid platform app") && (
+              {error.toLowerCase().includes("business.facebook.com") && (
                 <p className="text-[11px] text-red-300/80">
-                  Maslahat: Meta App Dashboard &gt; Instagram &gt; &quot;API setup with Instagram login&quot; bo&apos;limidagi <b>Instagram App ID</b> dan foydalaning.
+                  Eslatma: Agar Meta sizni Business Suite sahifasiga yo&apos;naltirsa, Meta Dashboard&apos;dagi konfiguratsiyada faqat Instagram ruxsatlari saqlanganligini tekshiring.
                 </p>
               )}
             </div>
@@ -220,36 +222,36 @@ export function InstagramConnectModal({
 
         {/* STATE A: ALREADY CONNECTED ACCOUNT VIEW */}
         {isConnected ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3.5">
                 <div className="relative">
                   {connectedAccount?.profilePictureUrl ? (
                     <Image
                       src={connectedAccount.profilePictureUrl}
                       alt={connectedAccount.handle || "Instagram"}
-                      width={44}
-                      height={44}
+                      width={48}
+                      height={48}
                       unoptimized
                       className="rounded-full object-cover ring-2 ring-emerald-500/50"
                     />
                   ) : (
-                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white font-bold text-sm ring-2 ring-emerald-500/50">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white font-bold text-sm ring-2 ring-emerald-500/50">
                       {connectedAccount?.handle?.charAt(0).toUpperCase() || "I"}
                     </div>
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5 block h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-[#121318]" />
+                  <span className="absolute -bottom-0.5 -right-0.5 block h-3.5 w-3.5 rounded-full bg-emerald-400 ring-2 ring-[#121318]" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-2">
                     <span className="font-semibold text-white text-sm">
                       @{connectedAccount?.handle}
                     </span>
-                    <span className="rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-300">
-                      Ulangan
+                    <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-300 border border-emerald-500/20">
+                      Ulangan (Active)
                     </span>
                   </div>
-                  <p className="text-[11px] text-neutral-400 mt-0.5">
+                  <p className="text-xs text-neutral-400 mt-0.5">
                     {connectedAccount?.accountType || "Professional (Creator / Business)"}
                   </p>
                 </div>
@@ -268,12 +270,12 @@ export function InstagramConnectModal({
               </div>
             </div>
 
-            <div className="flex gap-2.5 pt-1">
+            <div className="flex gap-3 pt-1">
               <Button
                 type="button"
                 variant="gradient"
                 onClick={onClose}
-                className="flex-1 h-10 text-xs font-semibold gap-1.5"
+                className="flex-1 h-11 text-xs font-semibold gap-1.5"
               >
                 <Check className="h-4 w-4" />
                 <span>Davom etish</span>
@@ -284,140 +286,161 @@ export function InstagramConnectModal({
                 variant="secondary"
                 disabled={isDisconnecting}
                 onClick={handleDisconnect}
-                className="h-10 px-3 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5"
+                className="h-11 px-4 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5"
               >
                 {isDisconnecting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <LogOut className="h-3.5 w-3.5" />
+                  <LogOut className="h-4 w-4" />
                 )}
                 <span>Akkauntni uzish</span>
               </Button>
             </div>
           </div>
         ) : (
-          /* STATE B: OFFICIAL "CONTINUE WITH INSTAGRAM" FLOW */
-          <div className="space-y-4">
-            <div className="rounded-2xl border border-white/10 bg-[#181920] p-4 text-center space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-lg shadow-pink-500/20 p-2.5">
-                <InstagramIcon className="w-full h-full" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-white text-sm">
-                  Instagram API (Unified Login)
-                </h3>
-                <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
-                  Meta rasmiy oynasi orqali Instagram Professional (Business yoki Creator) akkauntingizni ulang.
-                </p>
+          /* STATE B: OPUSCLIP-STYLE GUIDED CONNECTION EXPERIENCE */
+          <div className="space-y-5">
+            {/* 1. Requirements Card (Business / Creator Account) */}
+            <div className="rounded-2xl border border-white/10 bg-[#17181f] p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20 mt-0.5">
+                  <Info className="h-4 w-4" />
+                </div>
+                <div className="flex-1 text-xs">
+                  <div className="font-semibold text-white">
+                    Professional (Creator yoki Business) hisob talab qilinadi
+                  </div>
+                  <p className="text-neutral-400 mt-1 leading-relaxed">
+                    Meta rasmiy Graph API siyosatiga muvofiq, oddiy shaxsiy (Personal) profillar avtomatlashtirishni qo&apos;llab-quvvatlamaydi. Akkauntingiz Professional (Creator yoki Business) holatida bo&apos;lishi kerak.
+                  </p>
+                </div>
               </div>
 
-              {/* HERO BUTTON: "Continue with Instagram" */}
+              {/* How to switch dropdown */}
+              <div className="pt-1 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setShowHowToSwitch(!showHowToSwitch)}
+                  className="flex items-center justify-between w-full text-[11px] font-medium text-pink-400 hover:text-pink-300 transition py-1"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <HelpCircle className="h-3.5 w-3.5" />
+                    Shaxsiy akkauntni Professionalga qanday o&apos;tkazish mumkin? (1 daqiqa)
+                  </span>
+                  <span className="text-[10px] underline">
+                    {showHowToSwitch ? "Yashirish" : "Ko'rish"}
+                  </span>
+                </button>
+
+                {showHowToSwitch && (
+                  <div className="mt-2.5 p-3 rounded-xl bg-[#0f1015] border border-white/5 text-[11px] text-neutral-300 space-y-2 animate-in fade-in duration-150">
+                    <p className="font-medium text-white">Instagram mobil ilovasida:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-neutral-400">
+                      <li>Profil sahifangizga o&apos;ting va <b>Edit profile</b> tugmasini bosing.</li>
+                      <li>Pastga tushib, <b>Switch to professional account</b> ni tanlang.</li>
+                      <li><b>Creator</b> yoki <b>Business</b> toifasini tanlang (mutlaqo bepul).</li>
+                    </ol>
+                    <p className="text-[10px] text-emerald-400 pt-1">
+                      ✓ Ushbu o&apos;zgartirish postlaringizga ta&apos;sir qilmaydi va xohlagan vaqt qaytarish mumkin.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Requested Permissions Overview */}
+            <div className="rounded-2xl border border-white/10 bg-[#17181f] p-4 space-y-2.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-white">
+                <Layers className="h-4 w-4 text-cyan-400" />
+                <span>So&apos;raladigan rasmiy Meta ruxsatlari:</span>
+              </div>
+              <ul className="grid grid-cols-1 gap-2 text-[11px] text-neutral-400">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                  <span><b>Reels nashr qilish</b> — tayyorlangan videolarni to&apos;g&apos;ridan-to&apos;g&apos;ri chiqarish</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                  <span><b>Profil ma&apos;lumotlari va ko&apos;rishlar</b> — obunachilar va qamrov analitikasi</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 shrink-0" />
+                  <span><b>Izohlar va xabarlar</b> — auditoriya bilan aloqani avtomatlashtirish</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* 3. Primary Hero Action: Continue with Instagram */}
+            <div className="space-y-3">
               <button
                 type="button"
                 disabled={loadingMode !== null}
                 onClick={handleOpenInstagramOAuth}
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white font-semibold hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2.5 text-sm shadow-xl shadow-pink-500/25 disabled:opacity-50"
+                className="w-full h-12 rounded-2xl bg-gradient-to-r from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white font-bold hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2.5 text-sm shadow-xl shadow-pink-500/25 disabled:opacity-50"
               >
                 {loadingMode === "instagram" ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Instagram oynasi ochilmoqda...</span>
+                    <span>Meta oynasi ochilmoqda...</span>
                   </>
                 ) : (
                   <>
                     <InstagramIcon className="h-5 w-5" />
-                    <span className="font-bold tracking-wide">Continue with Instagram</span>
+                    <span className="tracking-wide">Continue with Instagram</span>
                   </>
                 )}
               </button>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-400">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Rasmiy Meta OAuth 2.0. Shaxsiy parollaringiz so&apos;ralmaydi va olinmaydi.</span>
+              </div>
             </div>
 
-            {/* Security Guarantee */}
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-2.5 flex items-center gap-2 text-[11px] text-emerald-300">
-              <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
-              <span>
-                Rasmiy OAuth 2.0: Tokenlar AES-256 bilan shifrlanadi. Shaxsiy parollaringiz olinmaydi.
-              </span>
-            </div>
-
-            {/* Collapsible Alternative Options */}
-            <div className="border-t border-white/5 pt-3">
+            {/* 4. Alternative Method: Connect through Facebook Page */}
+            <div className="pt-2 border-t border-white/5">
               <button
                 type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="text-[11px] font-medium text-neutral-400 hover:text-white transition flex items-center justify-between w-full py-1"
+                onClick={() => setShowFacebookOption(!showFacebookOption)}
+                className="flex items-center justify-between w-full text-[11px] font-medium text-neutral-400 hover:text-white transition py-1"
               >
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-cyan-400" />
-                  Boshqa ulanish usullari (Facebook sahifa yoki Test rejimi)
-                </span>
-                <span className="text-[10px] text-cyan-400 hover:underline">
-                  {showAdvanced ? "Yashirish" : "Ko'rsatish"}
+                <span>Instagram akkauntingiz Facebook sahifaga bog&apos;langanmi?</span>
+                <span className="text-[10px] text-cyan-400 underline">
+                  {showFacebookOption ? "Yashirish" : "Facebook orqali ulash"}
                 </span>
               </button>
 
-              {showAdvanced && (
-                <div className="mt-3 space-y-2.5 animate-in fade-in duration-150">
-                  {/* Option A: Facebook Popup */}
-                  <button
+              {showFacebookOption && (
+                <div className="mt-2.5 p-3 rounded-xl bg-[#17181f] border border-white/5 space-y-2 animate-in fade-in duration-150">
+                  <p className="text-[11px] text-neutral-400">
+                    Agar Instagram hisobingiz Facebook sahifangizga biriktirilgan bo&apos;lsa, standart Facebook Login orqali ham ruxsat berishingiz mumkin:
+                  </p>
+                  <Button
                     type="button"
-                    onClick={handleOpenFacebookPopup}
+                    variant="secondary"
+                    size="sm"
                     disabled={loadingMode !== null}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl border border-white/5 bg-[#17181f] hover:border-white/15 transition text-left group"
+                    onClick={handleOpenFacebookPopup}
+                    className="w-full text-xs h-9 gap-2 justify-center"
                   >
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1877F2] text-white">
-                        <svg className="h-3.5 w-3.5 fill-current" viewBox="0 0 24 24">
-                          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="text-xs font-medium text-white group-hover:text-cyan-400 transition">
-                          Facebook Login for Business (Meta OAuth)
-                        </div>
-                        <div className="text-[10px] text-neutral-400">
-                          Facebook sahifangiz orqali bog&apos;lash
-                        </div>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-3.5 w-3.5 text-neutral-500 group-hover:text-white transition" />
-                  </button>
-
-                  {/* Option B: Fast Smart Connect (Test handle) */}
-                  <div className="rounded-xl border border-white/5 bg-[#17181f] p-3 space-y-2">
-                    <div className="text-[11px] font-medium text-neutral-300">
-                      Parolsiz test rejimi (@username orqali)
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={smartHandle}
-                        onChange={(e) => setSmartHandle(e.target.value)}
-                        placeholder="@sizning_kanalingiz"
-                        className="flex-1 rounded-lg border border-white/10 bg-[#0f1015] px-2.5 py-1.5 text-xs text-white placeholder:text-neutral-500 focus:border-cyan-500 focus:outline-none"
-                      />
-                      <Button
-                        type="button"
-                        variant="gradient"
-                        disabled={isSmartConnecting || !smartHandle.trim()}
-                        onClick={() => {
-                          if (onSmartConnect && smartHandle.trim()) {
-                            onSmartConnect(smartHandle.trim());
-                          }
-                        }}
-                        className="text-xs h-8 px-2.5 gap-1 shrink-0"
-                      >
-                        {isSmartConnecting ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <Check className="h-3 w-3" />
-                        )}
-                        <span>Bog&apos;lash</span>
-                      </Button>
-                    </div>
-                  </div>
+                    <svg className="h-4 w-4 fill-[#1877F2]" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                    <span>Connect Instagram through Facebook</span>
+                  </Button>
                 </div>
               )}
+            </div>
+
+            {/* Cancel Button */}
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={onClose}
+                className="text-xs text-neutral-400 hover:text-white transition"
+              >
+                Bekor qilish
+              </button>
             </div>
           </div>
         )}
