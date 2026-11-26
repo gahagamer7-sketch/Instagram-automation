@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { prisma } from "@autochannel/db";
+import { getCurrentUser } from "@/lib/session";
 import { BrandStudio } from "@/components/brand/brand-studio";
 import {
   parseBrandKitResponse,
@@ -36,9 +37,15 @@ export default function BrandPage({ searchParams }: BrandPageProps) {
 
 async function BrandContent({ searchParams }: BrandPageProps) {
   const params = await searchParams;
-  const channel = await prisma.channel.findFirst({
-    include: { brandKit: true },
-  });
+  const currentUser = await getCurrentUser();
+  const channel = currentUser?.channel
+    ? await prisma.channel.findUnique({
+        where: { id: currentUser.channel.id },
+        include: { brandKit: true },
+      })
+    : await prisma.channel.findFirst({
+        include: { brandKit: true },
+      });
 
   const activeNiche = params.niche || channel?.niche || "Foydali Odatlar";
 

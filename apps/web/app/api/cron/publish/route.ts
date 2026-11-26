@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@autochannel/db";
-import { decrypt } from "@autochannel/crypto";
+import { decrypt, encrypt } from "@autochannel/crypto";
 import { InstagramGraphProvider, TelegramProvider } from "@autochannel/integrations";
 
 async function trySendTelegram(
@@ -28,8 +28,51 @@ async function trySendTelegram(
 function authorized(request: Request): boolean {
   const auth = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true;
+  // Production muhitida CRON_SECRET bo'lishi shart, aks holda so'rov rad etiladi
+  if (!secret) {
+    return process.env.NODE_ENV !== "production";
+  }
   return auth === `Bearer ${secret}`;
+}
+
+async function refreshExpiringTokens(encKey: string): Promise<number> {
+  const now = new Date();
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+  const expiringTokens = await prisma.oauthToken.findMany({
+    where: {
+      expiresAt: { lte: sevenDaysFromNow, gt: now },
+      updatedAt: { lte: oneDayAgo },
+    },
+    include: { channel: true },
+    take: 5,
+  });
+
+  let refreshedCount = 0;
+  for (const tokenRecord of expiringTokens) {
+    try {
+      const decrypted = decrypt(tokenRecord.accessToken, encKey);
+      const refreshed = await InstagramGraphProvider.refreshInstagramLongLivedToken({
+        accessToken: decrypted,
+      });
+      const newExpiresAt = new Date(Date.now() + refreshed.expiresIn * 1000);
+      const newEncrypted = encrypt(refreshed.accessToken, encKey);
+
+      await prisma.oauthToken.update({
+        where: { id: tokenRecord.id },
+        data: {
+          accessToken: newEncrypted,
+          expiresAt: newExpiresAt,
+        },
+      });
+      refreshedCount++;
+      console.log(`[cron/publish] Token avtomatik yangilandi: ${tokenRecord.channel.name}`);
+    } catch (err) {
+      console.warn(`[cron/publish] Token yangilashda xato (${tokenRecord.channel.name}):`, err);
+    }
+  }
+  return refreshedCount;
 }
 
 // Vercel Cron #2 (har soatda): joylash vaqti yetgan "ready" videoni topadi va
@@ -48,6 +91,11 @@ export async function GET(request: Request) {
         skipped: true,
         reason: `Tizim to'xtatilgan: ${settings.pauseReason ?? "Admin tomonidan"}`,
       });
+    }
+
+    const encKey = process.env.ENCRYPTION_KEY;
+    if (encKey) {
+      await refreshExpiringTokens(encKey);
     }
 
     const now = new Date();

@@ -32,29 +32,48 @@ export class GeminiProvider implements AiProvider {
     opts: Omit<GeminiOptions, "apiKey"> = {},
   ) {
     if (!apiKey) throw new AiProviderError("Gemini API kaliti bo'sh");
-    this.textModel = opts.textModel ?? "gemini-3.5-flash";
-    this.textFallback = opts.textFallbackModel ?? "gemini-flash-latest";
-    this.ttsModel = opts.ttsModel ?? "gemini-3.8-flash-lite-tts";
-    this.embeddingModel = opts.embeddingModel ?? "gemini-embedding-001";
+    this.textModel = opts.textModel ?? "gemini-2.0-flash";
+    this.textFallback = opts.textFallbackModel ?? "gemini-1.5-flash";
+    this.ttsModel = opts.ttsModel ?? "gemini-2.0-flash";
+    this.embeddingModel = opts.embeddingModel ?? "text-embedding-004";
     this.defaultVoice = opts.defaultVoice ?? "Kore";
   }
 
-  private async post<T>(model: string, method: string, body: unknown): Promise<T> {
-    const res = await fetch(`${BASE}/models/${model}:${method}?key=${this.apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await res.json()) as T & { error?: { message: string } };
-    if (!res.ok) {
+  private async post<T>(
+    model: string,
+    method: string,
+    body: unknown,
+    maxRetries = 2,
+  ): Promise<T> {
+    let attempt = 0;
+    while (attempt <= maxRetries) {
+      const res = await fetch(`${BASE}/models/${model}:${method}?key=${this.apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        return (await res.json()) as T;
+      }
+
+      const data = (await res.json().catch(() => ({}))) as { error?: { message: string } };
       const retryable = res.status === 429 || res.status === 503;
+
+      if (retryable && attempt < maxRetries) {
+        attempt++;
+        const delay = attempt * 1000;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
       throw new AiProviderError(
         data.error?.message ?? `Gemini xatosi (${res.status})`,
         res.status,
         retryable,
       );
     }
-    return data;
+    throw new AiProviderError("Gemini so'rovi amalga oshmadi", 500, false);
   }
 
   async generateText(prompt: string, opts: TextOptions = {}): Promise<TextResult> {
@@ -92,8 +111,8 @@ export class GeminiProvider implements AiProvider {
         };
       } catch (err) {
         lastErr = err;
-        // 503 (model band) bo'lsa fallback modelga o'tamiz
-        if (err instanceof AiProviderError && err.status === 503) continue;
+        // 503 (model band) yoki 429 (kvota/rate limit) bo'lsa fallback modelga o'tamiz
+        if (err instanceof AiProviderError && (err.status === 503 || err.status === 429)) continue;
         throw err;
       }
     }

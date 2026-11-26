@@ -4,8 +4,10 @@ import { prisma } from "@autochannel/db";
 function authorized(request: Request): boolean {
   const auth = request.headers.get("authorization");
   const secret = process.env.CRON_SECRET;
-  // Agar CRON_SECRET o'rnatilmagan bo'lsa (lokal dev), ruxsat beriladi
-  if (!secret) return true;
+  // Production muhitida CRON_SECRET bo'lishi shart, aks holda so'rov rad etiladi
+  if (!secret) {
+    return process.env.NODE_ENV !== "production";
+  }
   return auth === `Bearer ${secret}`;
 }
 

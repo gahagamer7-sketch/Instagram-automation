@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { DiscoverForm } from "@/components/niche/discover-form";
 import { prisma } from "@autochannel/db";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata = {
   title: "Nisha tahlili — AutoChannel",
@@ -24,12 +25,19 @@ export default function NichePage() {
 }
 
 async function NicheContent() {
+  const currentUser = await getCurrentUser();
+
   const [candidates, channel] = await Promise.all([
     prisma.nicheCandidate.findMany({
       orderBy: { scoreTotal: "desc" },
       take: 20,
     }),
-    prisma.channel.findFirst({ select: { niche: true } }),
+    currentUser?.channel
+      ? prisma.channel.findUnique({
+          where: { id: currentUser.channel.id },
+          select: { niche: true },
+        })
+      : prisma.channel.findFirst({ select: { niche: true } }),
   ]);
 
   const initialCandidates = candidates.map((c) => ({

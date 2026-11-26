@@ -434,6 +434,18 @@ export async function disconnectInstagramAction(
         },
       });
 
+      // Ushbu kanalga tegishli 'ready' statusdagi videolarni to'xtatish
+      await tx.video.updateMany({
+        where: {
+          channelId: channel.id,
+          status: { in: ["ready", "publishing"] },
+        },
+        data: {
+          status: "failed",
+          error: "Instagram akkaunti uzilganligi sababli nashr to'xtatildi",
+        },
+      });
+
       // Foydalanuvchida boshqa faol Instagram kanali bo'lmasa, apiCredential holatini yangilaymiz
       const remainingActive = await tx.channel.count({
         where: { userId: session.userId, status: "active", igUserId: { not: null } },

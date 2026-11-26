@@ -146,11 +146,14 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
   const coverPath = join(outputDir, "cover.jpg");
 
   // 2. FFmpeg bilan video yig'ish (Background + Audio + Subtitrlar)
-  // Subtitr fayli yo'lini FFmpeg filtri uchun moslash (Windows backslash to'g'irlash)
-  const escapedAssPath = assPath.replace(/\\/g, "/").replace(/:/g, "\\:");
+  // Subtitr fayli yo'lini FFmpeg filtri uchun moslash (Windows backslash va probellarni to'g'irlash)
+  const escapedAssPath = assPath
+    .replace(/\\/g, "/")
+    .replace(/:/g, "\\:")
+    .replace(/'/g, "'\\''");
 
   const inputArgs: string[] = [];
-  let videoFilter = `ass=${escapedAssPath}`;
+  let videoFilter = `ass='${escapedAssPath}'`;
 
   if (options.backgroundMedia) {
     const bgPath = options.backgroundMedia.path.replace(/\\/g, "/");
@@ -159,7 +162,7 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     } else {
       inputArgs.push("-loop", "1", "-i", bgPath);
     }
-    videoFilter = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,ass=${escapedAssPath}`;
+    videoFilter = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,ass='${escapedAssPath}'`;
   } else {
     inputArgs.push("-f", "lavfi", "-i", `color=c=0x0B1220:s=1080x1920:r=30:d=${roundedDuration}`);
   }

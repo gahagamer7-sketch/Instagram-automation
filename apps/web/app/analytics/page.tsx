@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { prisma } from "@autochannel/db";
+import { getCurrentUser } from "@/lib/session";
 import {
   AnalyticsView,
   type AnalyticsSummary,
@@ -30,14 +31,23 @@ export default function AnalyticsPage() {
 }
 
 async function AnalyticsContent() {
+  const currentUser = await getCurrentUser();
+  const channelId = currentUser?.channel?.id;
+
   const [channel, snapshots, publishedVideos, costAggregate] = await Promise.all([
-    prisma.channel.findFirst({ select: { niche: true } }),
+    currentUser?.channel
+      ? prisma.channel.findUnique({
+          where: { id: currentUser.channel.id },
+          select: { niche: true },
+        })
+      : prisma.channel.findFirst({ select: { niche: true } }),
     prisma.analyticsSnapshot.findMany({
+      where: channelId ? { video: { channelId } } : undefined,
       orderBy: { date: "asc" },
       take: 7,
     }),
     prisma.video.findMany({
-      where: { status: "published" },
+      where: channelId ? { status: "published", channelId } : { status: "published" },
       include: { idea: true, snapshots: true },
       orderBy: { publishedAt: "desc" },
       take: 10,

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { prisma } from "@autochannel/db";
+import { getCurrentUser } from "@/lib/session";
 import { CalendarView, type VideoCalendarItem } from "@/components/calendar/calendar-view";
 
 export const metadata = {
@@ -24,9 +25,18 @@ export default function CalendarPage() {
 }
 
 async function CalendarContent() {
+  const currentUser = await getCurrentUser();
+  const channelFilter = currentUser?.channel?.id ? { channelId: currentUser.channel.id } : {};
+
   const [channel, videos] = await Promise.all([
-    prisma.channel.findFirst({ select: { niche: true } }),
+    currentUser?.channel
+      ? prisma.channel.findUnique({
+          where: { id: currentUser.channel.id },
+          select: { niche: true },
+        })
+      : prisma.channel.findFirst({ select: { niche: true } }),
     prisma.video.findMany({
+      where: channelFilter,
       include: {
         idea: true,
         scripts: {
