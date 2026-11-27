@@ -3,15 +3,19 @@
 import { prisma, IdeaStatus } from "@autochannel/db";
 import { getCurrentUser } from "@/lib/session";
 import { getAiProvider, getGeminiTtsProvider, getUserProviderKey } from "@/lib/credentials";
-import { getActiveSkill, getSkillText } from "@/lib/skills";
-import { createVideoFromIdea } from "@autochannel/core";
+import {
+  createVideoFromIdea,
+  getAnimationStyle,
+  type AnimationStyleId,
+} from "@autochannel/core";
 import { revalidatePath } from "next/cache";
 
 export interface CreateVideoInput {
   topic: string;
+  styleId?: AnimationStyleId;
   aiProvider?: "groq" | "gemini";
   voiceId?: string;
-  customSkillText?: string;
+  hookStyle?: string;
 }
 
 export interface CreateVideoResponse {
@@ -27,8 +31,7 @@ export interface CreateVideoResponse {
 }
 
 /**
- * Foydalanuvchi kiritgan g'oya va skill asosida to'liq avtomatlashgan video yaratadi.
- * Eslatma: Ssenariy uchun Groq yoki Gemini, ovoz uchun har doim tabiiy Gemini TTS ishlatiladi.
+ * Foydalanuvchi kiritgan g'oya va tanlangan animatsiya uslubi asosida 1080x1920 video yaratadi.
  */
 export async function createVideoAction(
   input: CreateVideoInput,
@@ -45,6 +48,7 @@ export async function createVideoAction(
     }
 
     const aiChoice = input.aiProvider ?? "groq";
+    const styleProfile = getAnimationStyle(input.styleId);
 
     // 1. Ssenariy yozuvchi AI provayderi (Groq yoki Gemini)
     const textLookup = await getAiProvider(aiChoice, currentUser.user.id);
@@ -58,19 +62,10 @@ export async function createVideoAction(
       return { ok: false, message: ttsLookup.message };
     }
 
-    // 3. Skill matnini aniqlash
-    let skillText = input.customSkillText?.trim();
-    if (!skillText) {
-      const activeSkill = await getActiveSkill();
-      if (activeSkill) {
-        skillText = (await getSkillText(activeSkill.id)) ?? undefined;
-      }
-    }
-
-    // 4. Foydalanuvchining shaxsiy Pexels API kaliti (agar kiritilgan bo'lsa)
+    // 3. Foydalanuvchining shaxsiy Pexels API kaliti (agar kiritilgan bo'lsa)
     const pexelsApiKey = (await getUserProviderKey(currentUser.user.id, "pexels")) ?? undefined;
 
-    // 5. Foydalanuvchi kanali
+    // 4. Foydalanuvchi kanali
     let channel = currentUser.channel;
     if (!channel) {
       channel = await prisma.channel.create({
@@ -84,24 +79,27 @@ export async function createVideoAction(
       });
     }
 
-    // 6. Videoni generatsiya qilish (Ssenariy -> Ovoz -> Subtitr -> Render -> Storage)
+    const hookHint = input.hookStyle ? `Hook uslubi: ${input.hookStyle}` : undefined;
+
+    // 5. Videoni generatsiya qilish (Uslubiy Ssenariy -> Ovoz -> Subtitr -> Render -> Storage)
     const result = await createVideoFromIdea({
       topic,
       niche: channel.niche || "Foydali Ma'lumotlar",
-      skillText: skillText || undefined,
+      styleId: styleProfile.id,
+      skillText: hookHint,
       channelName: channel.name,
-      voiceId: input.voiceId || "Puck",
+      voiceId: input.voiceId || styleProfile.defaultVoiceId,
       textAiProvider: textLookup.provider,
       ttsAiProvider: ttsLookup.provider,
       pexelsApiKey,
     });
 
-    // 7. Bazaga saqlash
+    // 6. Bazaga saqlash
     const idea = await prisma.contentIdea.create({
       data: {
         channelId: channel.id,
         topic: result.title,
-        source: "studio",
+        source: styleProfile.id,
         status: IdeaStatus.used,
       },
     });
@@ -152,11 +150,12 @@ export async function createVideoAction(
 }
 
 /**
- * Bir zumda trenddagi 3-5 ta g'oyani taklif qilish.
+ * Tanlangan animatsiya uslubi va nisha asosida 4 ta trend g'oyani taklif qilish.
  */
 export async function suggestIdeasAction(
   niche: string = "Foydali Ma'lumotlar",
   aiProvider: "groq" | "gemini" = "groq",
+  styleId: AnimationStyleId = "deep-dive",
 ): Promise<{ ok: boolean; ideas: string[]; error?: string }> {
   try {
     const currentUser = await getCurrentUser();
@@ -168,13 +167,16 @@ export async function suggestIdeasAction(
       return { ok: false, ideas: [], error: aiLookup.message };
     }
 
-    const prompt = `Sen professional qisqa videolar (Reels, TikTok, Shorts) uchun trenddagi g'oyalar mutaxassisisan.
-Nisha: "${niche}".
-Iltimos, o'zbek tilida tomoshabin diqqatini birinchi 2 soniyada ushlab qoladigan 4 ta qiziqarli video g'oyasi/mavzusini taklif qil.
+    const styleProfile = getAnimationStyle(styleId);
+    const prompt = `Sen professional qisqa videolar (Faceless Shorts, Reels, TikTok) uchun g'oyalar mutaxassisisan.
+Tanlangan animatsiya uslubi: "${styleProfile.name}" — ${styleProfile.summary}
+Uslubga eng mos mavzular: ${styleProfile.bestFor}
+Qo'shimcha nisha yo'nalishi: "${niche}".
+Iltimos, o'zbek tilida aynan "${styleProfile.name}" animatsiya uslubiga juda mos keladigan, birinchi 2 soniyada diqqatni ushlab qoladigan 4 ta qiziqarli video mavzusi taklif qil.
 Har bir g'oya bitta qisqa, aniq va jalb qiluvchi jumla bo'lsin.
 Faqat JSON massiv shaklida javob ber: ["G'oya 1", "G'oya 2", "G'oya 3", "G'oya 4"].`;
 
-    const res = await aiLookup.provider.generateText(prompt, { jsonMode: true, maxOutputTokens: 300 });
+    const res = await aiLookup.provider.generateText(prompt, { jsonMode: true, maxOutputTokens: 350 });
     const parsed = JSON.parse(res.text);
     const ideas = Array.isArray(parsed) ? parsed : Object.values(parsed);
 
@@ -186,13 +188,12 @@ Faqat JSON massiv shaklida javob ber: ["G'oya 1", "G'oya 2", "G'oya 3", "G'oya 4
     return {
       ok: false,
       ideas: [
-        "Vaqtni to'g'ri boshqarishning 3 ta oltin qoidasi",
-        "Har kuni ertalab qilinishi kerak bo'lgan 2 ta muhim odat",
-        "Miyani chalg'ituvchi 3 ta xato va ularning yechimi",
-        "Har oy daromadning 10 foizini jamg'arish siri",
+        "Agar 3 kun umuman uxlamasangiz miyangizda nima sodir bo'ladi?",
+        "Nega insonlar qorong'uda g'alati tovushlarni eshitgandek bo'ladi?",
+        "Lift uzilib ketsa omon qolish uchun nima qilish kerak?",
+        "Birgina novvoyxona tufayli butun London qanday yonib ketgan?",
       ],
       error: err instanceof Error ? err.message : "G'oya olishda xatolik",
     };
   }
 }
-

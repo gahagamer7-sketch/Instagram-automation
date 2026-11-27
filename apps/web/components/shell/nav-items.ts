@@ -3,7 +3,6 @@ import {
   Clapperboard,
   Film,
   LayoutDashboard,
-  Palette,
   Settings,
 } from "lucide-react";
 
@@ -20,7 +19,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, mobile: true },
   { href: "/reels/create", label: "Video Yaratish", icon: Clapperboard, mobile: true },
   { href: "/reels", label: "Mening Videolarim", icon: Film, mobile: true },
-  { href: "/settings/skill", label: "Video Qoidalari (Skill)", icon: Palette },
   { href: "/settings", label: "Sozlamalar", icon: Settings, mobile: true },
 ];
 

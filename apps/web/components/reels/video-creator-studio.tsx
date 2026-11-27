@@ -9,20 +9,28 @@ import {
   Clapperboard,
   Clock,
   Copy,
+  Download,
   Film,
   Lightbulb,
+  Maximize2,
+  Palette,
   Play,
   Radio,
   Rocket,
   RotateCcw,
-  SlidersHorizontal,
   Smartphone,
   Sparkles,
   Volume2,
   Wand2,
+  X,
   Zap,
-  Download,
 } from "lucide-react";
+import {
+  ANIMATION_STYLES,
+  getAnimationStyle,
+  type AnimationStyleId,
+  type AnimationStyleProfile,
+} from "@autochannel/core/styles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -32,7 +40,6 @@ import {
 } from "@/app/reels/actions";
 
 interface VideoCreatorStudioProps {
-  initialActiveSkill?: string;
   defaultNiche?: string;
 }
 
@@ -51,41 +58,42 @@ const VOICES = [
     name: "Puck",
     gender: "Erkak",
     tone: "Tiniq, ishonchli va rasmiy",
-    desc: "Biznes, yangiliklar va ta'limiy mavzular uchun ideal.",
+    desc: "Ilm-fan, tarix va ta'limiy videolar uchun ideal.",
   },
   {
     id: "Kore",
     name: "Kore",
     gender: "Ayol",
     tone: "Muloyim, jozibali va ravon",
-    desc: "Layfxaklar, psixologiya va qiziqarli hikoyalarga mos.",
+    desc: "Qiziqarli hikoyalar va psixologiyaga mos.",
   },
   {
     id: "Fenrir",
     name: "Fenrir",
     gender: "Erkak",
     tone: "Qat'iy, chuqur va baquvvat",
-    desc: "Motivatsiya, shok faktlar va hayratlanarli sirlar uchun.",
+    desc: "Detektiv sirlar va hayratlanarli faktlar uchun.",
   },
   {
     id: "Aoede",
     name: "Aoede",
     gender: "Ayol",
     tone: "Jo'shqin, yorqin va ilhomlantiruvchi",
-    desc: "Ijobiy kayfiyat, sayohat va trend videolar uchun.",
+    desc: "Hayotiy qo'llanmalar va tezkor layfxaklar uchun.",
   },
 ];
 
 export function VideoCreatorStudio({
-  initialActiveSkill = "",
   defaultNiche = "Foydali Ma'lumotlar",
 }: VideoCreatorStudioProps) {
+  const [selectedStyle, setSelectedStyle] = useState<AnimationStyleId>("deep-dive");
+  const [previewStyleModal, setPreviewStyleModal] = useState<AnimationStyleProfile | null>(null);
+
   const [topic, setTopic] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(NISHE_CATEGORIES[0].id);
   const [aiProvider, setAiProvider] = useState<"groq" | "gemini">("groq");
   const [voiceId, setVoiceId] = useState("Puck");
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [customSkill, setCustomSkill] = useState(initialActiveSkill);
+  const [voiceManuallyChanged, setVoiceManuallyChanged] = useState(false);
   const [hookStyle, setHookStyle] = useState("Savol & Qiziqish");
 
   const [suggesting, setSuggesting] = useState(false);
@@ -99,6 +107,8 @@ export function VideoCreatorStudio({
 
   const [copiedCaption, setCopiedCaption] = useState(false);
 
+  const activeStyle = getAnimationStyle(selectedStyle);
+
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (loading) {
@@ -110,11 +120,18 @@ export function VideoCreatorStudio({
     return () => clearInterval(timer);
   }, [loading]);
 
+  function handleSelectStyle(style: AnimationStyleProfile) {
+    setSelectedStyle(style.id);
+    if (!voiceManuallyChanged) {
+      setVoiceId(style.defaultVoiceId);
+    }
+  }
+
   async function handleSuggestIdeas(categoryQuery?: string) {
     setSuggesting(true);
     const nicheTarget = categoryQuery || defaultNiche;
     try {
-      const res = await suggestIdeasAction(nicheTarget, aiProvider);
+      const res = await suggestIdeasAction(nicheTarget, aiProvider, selectedStyle);
       if (res.ok && res.ideas.length > 0) {
         setSuggestedIdeas(res.ideas);
       }
@@ -138,19 +155,12 @@ export function VideoCreatorStudio({
     const t4 = setTimeout(() => setProgressStage(5), 13000);
 
     try {
-      const fullSkill = [
-        customSkill.trim(),
-        `Hook uslubi: ${hookStyle}.`,
-        "Format: 1080x1920 vertikal qisqa video. Kirish qismi birinchi 2 soniyada diqqatni jalb qilsin.",
-      ]
-        .filter(Boolean)
-        .join("\n\n");
-
       const res = await createVideoAction({
         topic: topic.trim(),
+        styleId: selectedStyle,
         aiProvider,
         voiceId,
-        customSkillText: fullSkill || undefined,
+        hookStyle,
       });
 
       clearTimeout(t1);
@@ -189,10 +199,13 @@ export function VideoCreatorStudio({
   }
 
   const stageItems = [
-    { step: 1, label: `1. AI Ssenariy generatsiyasi (${aiProvider === "groq" ? "Groq AI" : "Gemini"})` },
+    {
+      step: 1,
+      label: `1. ${activeStyle.name} uslubida AI ssenariy`,
+    },
     { step: 2, label: "2. Tabiiy o'zbekcha ovoz (TTS)" },
     { step: 3, label: "3. Fon media va vizual kadrlar" },
-    { step: 4, label: "4. Dinamik subtitrlar montaji" },
+    { step: 4, label: "4. Uslubga mos subtitrlar montaji" },
     { step: 5, label: "5. 1080×1920 Full HD render" },
   ];
 
@@ -211,18 +224,18 @@ export function VideoCreatorStudio({
               </h1>
               <Badge tone="primary" className="gap-1 py-0.5 px-2.5 text-[11px] font-semibold">
                 <Sparkles className="h-3 w-3" aria-hidden />
-                Pro Workstation
+                6 Animatsiya Uslubi
               </Badge>
             </div>
             <p className="mt-0.5 text-xs sm:text-sm text-muted">
-              G&apos;oya va Rejissyor uslubi asosida 1080×1920 Full HD vertikal video ishlab chiqarish.
+              Uslubni tanlang — AI uning ssenariy tuzilishi, ritmi va vizual qoidalarini o&apos;rganib video yaratadi.
             </p>
           </div>
         </div>
 
         <Badge tone="success" className="gap-1.5 py-1.5 px-3 text-xs w-fit">
           <Radio className="h-3.5 w-3.5 animate-pulse text-success" aria-hidden />
-          Dual-AI Engine Tayyor
+          {activeStyle.name} faol
         </Badge>
       </div>
 
@@ -230,12 +243,127 @@ export function VideoCreatorStudio({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
         {/* CHAP USTUN: KREATIV BOSHQARUV MARKAZI (lg:col-span-7) */}
         <div className="lg:col-span-7 space-y-5">
-          {/* 1. G'oya & Trend Lab */}
+          {/* 1. ANIMATSIYA USLUBINI TANLASH */}
+          <section className="card p-6 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-violet-300 border border-primary/40 text-xs font-bold">
+                  01
+                </span>
+                <div>
+                  <h2 className="font-heading text-base font-bold text-text">
+                    Animatsiya Uslubini Tanlang
+                  </h2>
+                </div>
+              </div>
+
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-cyan">
+                <Palette className="h-3.5 w-3.5" aria-hidden />
+                AI uslub qoidalarini avtomatik qo&apos;llaydi
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
+              {ANIMATION_STYLES.map((style) => {
+                const isSelected = selectedStyle === style.id;
+                return (
+                  <div
+                    key={style.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleSelectStyle(style)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleSelectStyle(style);
+                      }
+                    }}
+                    className={`group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border text-left transition-all duration-200 ${
+                      isSelected
+                        ? "border-primary bg-primary/12 ring-2 ring-primary/45 shadow-[0_0_26px_rgba(124,58,237,0.28)]"
+                        : "border-border bg-surface-2/60 hover:border-primary/45 hover:bg-surface-2"
+                    }`}
+                  >
+                    {/* Preview Image */}
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-background border-b border-border">
+                      <img
+                        src={style.previewImage}
+                        alt={style.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/35" />
+
+                      <div className="absolute top-2 left-2 right-2 flex items-center justify-between gap-1">
+                        <span className="font-mono rounded-md bg-black/70 backdrop-blur px-2 py-0.5 text-[10px] font-semibold text-white border border-white/10">
+                          {style.durationRange}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewStyleModal(style);
+                          }}
+                          className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-md bg-black/70 text-white/90 hover:bg-primary hover:text-white transition border border-white/15"
+                          title="Uslub namunasini kattalashtirib ko'rish"
+                          aria-label={`${style.name} namunasini kattalashtirish`}
+                        >
+                          <Maximize2 className="h-3 w-3" aria-hidden />
+                        </button>
+                      </div>
+
+                      {/* Palette swatches */}
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-black/70 backdrop-blur px-2 py-1 border border-white/10">
+                        {[
+                          style.palette.bg,
+                          style.palette.primary,
+                          style.palette.secondary,
+                          style.palette.highlight,
+                        ].map((hex, i) => (
+                          <span
+                            key={i}
+                            className="h-2.5 w-2.5 rounded-full border border-white/25"
+                            style={{ backgroundColor: hex }}
+                          />
+                        ))}
+                      </div>
+
+                      {isSelected && (
+                        <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white shadow">
+                          <Check className="h-3 w-3" aria-hidden />
+                          Tanlangan
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Text Details */}
+                    <div className="p-3.5 space-y-1.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between gap-1">
+                          <h3 className="font-heading text-sm font-bold text-text truncate">
+                            {style.name}
+                          </h3>
+                        </div>
+                        <span className="inline-block text-[10px] font-semibold text-accent-cyan">
+                          {style.tag}
+                        </span>
+                        <p className="mt-1.5 text-[11px] text-muted leading-relaxed line-clamp-3">
+                          {style.summary}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 2. G'oya & Trend Lab */}
           <section className="card p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="font-mono flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-violet-300 border border-primary/40 text-xs font-bold">
-                  01
+                  02
                 </span>
                 <h2 className="font-heading text-base font-bold text-text">
                   Video G&apos;oyasi yoki Mavzusi
@@ -249,11 +377,10 @@ export function VideoCreatorStudio({
                 className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-violet-300 hover:bg-primary/20 transition-colors disabled:opacity-50"
               >
                 <Wand2 className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`} aria-hidden />
-                {suggesting ? "G'oyalar qidirilmoqda..." : "AI Trend G'oyalar"}
+                {suggesting ? "G'oyalar qidirilmoqda..." : `${activeStyle.name} g'oyalari`}
               </button>
             </div>
 
-            {/* Nisha toifalari */}
             <div className="flex flex-wrap gap-2 pt-1">
               {NISHE_CATEGORIES.map((cat) => (
                 <button
@@ -274,12 +401,11 @@ export function VideoCreatorStudio({
               ))}
             </div>
 
-            {/* Asosiy Mavzu Textarea */}
             <div className="relative">
               <textarea
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                placeholder="Masalan: Har kuni ertalab 15 daqiqa kitob o'qish miyaga qanday ta'sir qiladi va uning 3 ta muhim siri..."
+                placeholder={`Masalan (${activeStyle.name}): Agar odam 3 daqiqa nafasini ushlab tursa tanada nima sodir bo'ladi?`}
                 rows={3}
                 disabled={loading}
                 className="w-full rounded-2xl border border-border bg-background/80 px-4 py-3.5 text-sm text-text placeholder:text-muted/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/25 transition resize-none leading-relaxed"
@@ -289,12 +415,11 @@ export function VideoCreatorStudio({
               </div>
             </div>
 
-            {/* AI Taklif qilgan g'oyalar ro'yxati */}
             {suggestedIdeas.length > 0 && (
               <div className="space-y-2.5 pt-1">
                 <span className="text-xs font-semibold text-muted flex items-center gap-1.5">
                   <Lightbulb className="h-3.5 w-3.5 text-warning" aria-hidden />
-                  Quyidagi trend g&apos;oyalardan birini tanlang:
+                  {activeStyle.name} uslubiga mos g&apos;oyalar:
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {suggestedIdeas.map((idea, idx) => (
@@ -315,11 +440,11 @@ export function VideoCreatorStudio({
             )}
           </section>
 
-          {/* 2. Ssenariy Yozuvchi AI Dvigateli (Groq vs Gemini) */}
+          {/* 3. Ssenariy Yozuvchi AI Dvigateli */}
           <section className="card p-6 space-y-4">
             <div className="flex items-center gap-2.5">
               <span className="font-mono flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-violet-300 border border-primary/40 text-xs font-bold">
-                02
+                03
               </span>
               <h2 className="font-heading text-base font-bold text-text">
                 Ssenariy Dvigateli (AI Engine)
@@ -375,15 +500,15 @@ export function VideoCreatorStudio({
             </div>
           </section>
 
-          {/* 3. Ovoz Studiyasi (Voice Lab) */}
+          {/* 4. Ovoz Studiyasi & Hook */}
           <section className="card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <span className="font-mono flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-violet-300 border border-primary/40 text-xs font-bold">
-                  03
+                  04
                 </span>
                 <h2 className="font-heading text-base font-bold text-text">
-                  Ovoz Studiyasi (Gemini TTS)
+                  Ovoz Studiyasi (Gemini TTS) va Hook
                 </h2>
               </div>
               <span className="text-xs font-semibold text-accent-cyan">
@@ -398,7 +523,10 @@ export function VideoCreatorStudio({
                   <button
                     key={v.id}
                     type="button"
-                    onClick={() => setVoiceId(v.id)}
+                    onClick={() => {
+                      setVoiceId(v.id);
+                      setVoiceManuallyChanged(true);
+                    }}
                     className={`flex cursor-pointer items-start gap-3.5 p-4 rounded-2xl border text-left transition-all duration-200 ${
                       isSelected
                         ? "border-primary bg-primary/15 ring-1 ring-primary/50 shadow-[0_0_24px_rgba(124,58,237,0.2)]"
@@ -440,31 +568,8 @@ export function VideoCreatorStudio({
                 );
               })}
             </div>
-          </section>
 
-          {/* 4. Rejissyor Uslubi & Maxsus Skill (Director Mode) */}
-          <section className="card p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-violet-300 border border-primary/40 text-xs font-bold">
-                  04
-                </span>
-                <h2 className="font-heading text-base font-bold text-text">
-                  Rejissyor Uslubi (Director Mode)
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-semibold text-muted hover:text-text transition-colors"
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
-                {showAdvanced ? "Yashirish" : "Sozlash"}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 border-t border-border">
               <div>
                 <label className="text-xs font-semibold text-muted block mb-1.5">
                   Hook (Birinchi 2 soniya) uslubi
@@ -492,25 +597,8 @@ export function VideoCreatorStudio({
                 </div>
               </div>
             </div>
-
-            {showAdvanced && (
-              <div className="pt-3 space-y-2 border-t border-border mt-2">
-                <label className="text-xs text-muted block font-medium">
-                  Maxsus Mahorat (Skill) qoidasi
-                </label>
-                <textarea
-                  value={customSkill}
-                  onChange={(e) => setCustomSkill(e.target.value)}
-                  placeholder="Masalan: Gaplar qisqa va tezkor bo'lsin. Murakkab so'zlar ishlatilmasin..."
-                  rows={3}
-                  disabled={loading}
-                  className="w-full rounded-2xl border border-border bg-background/80 p-3.5 text-xs text-text placeholder:text-muted/60 focus:border-primary focus:outline-none font-mono"
-                />
-              </div>
-            )}
           </section>
 
-          {/* Xatolik xabari */}
           {error && (
             <div className="rounded-2xl border border-danger/40 bg-danger/10 p-4 text-xs font-medium text-red-300 flex items-start gap-2.5">
               <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5 text-danger" aria-hidden />
@@ -529,12 +617,12 @@ export function VideoCreatorStudio({
             {loading ? (
               <>
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                Video Ishlab Chiqarilmoqda... ({elapsedSec}s)
+                {activeStyle.name} uslubida yaratilmoqda... ({elapsedSec}s)
               </>
             ) : (
               <>
                 <Clapperboard className="h-5 w-5" aria-hidden />
-                1080×1920 Video Ishlab Chiqarish
+                {activeStyle.name} Uslubida Video Yaratish
               </>
             )}
           </Button>
@@ -545,7 +633,7 @@ export function VideoCreatorStudio({
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-bold uppercase tracking-wider text-muted flex items-center gap-1.5">
               <Smartphone className="h-4 w-4 text-accent-cyan" aria-hidden />
-              Jonli 9:16 Canvas (Live Stage)
+              Jonli 9:16 Canvas ({activeStyle.name})
             </span>
             {result?.videoUrl && (
               <Badge tone="success" className="gap-1 text-[11px]">
@@ -555,17 +643,14 @@ export function VideoCreatorStudio({
             )}
           </div>
 
-          {/* Haqiqiy Smartfon Mockup Romi */}
           <div className="mx-auto w-full max-w-[340px] rounded-[3rem] p-3.5 bg-gradient-to-b from-surface-2 to-background border border-white/15 shadow-2xl neon-glow">
-            {/* Smartfon Dynamic Island */}
             <div className="mx-auto mb-3 h-4 w-28 rounded-full bg-background border border-border flex items-center justify-center">
               <div className="h-2 w-2 rounded-full bg-surface-2 mr-2" />
               <div className="h-1.5 w-8 rounded-full bg-surface-2" />
             </div>
 
-            {/* Smartfon Ekrani (9:16 nisbat) */}
             <div className="relative aspect-[9/16] w-full rounded-[2.2rem] overflow-hidden bg-black border border-border flex flex-col justify-between p-4">
-              {/* 1. Natija holati: Video pleyer */}
+              {/* 1. Natija holati */}
               {result && result.videoUrl ? (
                 <div className="absolute inset-0 z-10 flex flex-col justify-between bg-black">
                   <video
@@ -583,7 +668,7 @@ export function VideoCreatorStudio({
                 </div>
               ) : null}
 
-              {/* 2. Ishlab chiqarish (Loading) holati */}
+              {/* 2. Loading holati */}
               {loading && (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 bg-background/95 backdrop-blur-md text-center space-y-5">
                   <div className="relative flex items-center justify-center">
@@ -593,7 +678,7 @@ export function VideoCreatorStudio({
 
                   <div className="space-y-1">
                     <p className="font-heading text-sm font-bold text-text">
-                      Video Ishlab Chiqarilmoqda
+                      {activeStyle.name} Renderi
                     </p>
                     <p className="nums font-mono text-xs text-accent-cyan font-semibold flex items-center justify-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" aria-hidden />
@@ -601,7 +686,6 @@ export function VideoCreatorStudio({
                     </p>
                   </div>
 
-                  {/* 5-bosqichli status ro'yxati */}
                   <div className="w-full space-y-2 text-left pt-2 text-[11px]">
                     {stageItems.map((item) => {
                       const active = progressStage >= item.step;
@@ -628,37 +712,50 @@ export function VideoCreatorStudio({
                 </div>
               )}
 
-              {/* 3. Kutish (Standby) holati */}
+              {/* 3. Kutish (Standby) holati: tanlangan animatsiya uslubi previewi */}
               {!result && !loading && (
-                <div className="flex h-full flex-col justify-between py-6 px-2 text-center text-muted studio-grid-bg">
-                  <div className="flex items-center justify-between font-mono text-[10px] text-muted">
-                    <span>9:16 VERTICAL</span>
+                <div className="relative flex h-full flex-col justify-between py-5 px-2 text-center text-muted">
+                  <img
+                    src={activeStyle.previewImage}
+                    alt={activeStyle.name}
+                    className="absolute inset-0 h-full w-full object-cover opacity-25 blur-[2px]"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/55 to-black/90" />
+
+                  <div className="relative z-10 flex items-center justify-between font-mono text-[10px] text-white/80">
+                    <span>{activeStyle.renderConfig.headerLabel}</span>
                     <span>1080 × 1920</span>
                   </div>
 
-                  <div className="space-y-3 my-auto">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-2/80 border border-border text-accent-cyan shadow-inner">
+                  <div className="relative z-10 space-y-3 my-auto">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-black/70 border border-white/15 text-accent-cyan shadow-xl backdrop-blur">
                       <Play className="h-6 w-6 ml-0.5" aria-hidden />
                     </div>
-                    <div className="space-y-1">
-                      <p className="font-heading text-xs font-bold text-text">
-                        Katta Studiya Tayyor
+                    <div className="space-y-1.5 px-2">
+                      <span
+                        className="inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border border-white/15 bg-black/60 text-white"
+                      >
+                        {activeStyle.tag}
+                      </span>
+                      <p className="font-heading text-sm font-bold text-white">
+                        {activeStyle.name}
                       </p>
-                      <p className="text-[11px] text-muted leading-relaxed px-4">
-                        Chap panelda mavzuni kiriting va video ishlab chiqarish tugmasini bosing.
+                      <p className="text-[11px] text-white/75 leading-relaxed">
+                        AI ushbu uslub qoidalarini o&apos;rganib, ssenariy va subtitrlarni moslashtiradi.
                       </p>
                     </div>
                   </div>
 
-                  <div className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-2/60 p-2.5 text-[10px] font-medium text-muted">
+                  <div className="relative z-10 inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-black/70 backdrop-blur p-2.5 text-[10px] font-medium text-white/90">
                     <Rocket className="h-3 w-3 text-accent-cyan" aria-hidden />
-                    <span>Groq AI + Gemini TTS</span>
+                    <span>
+                      {aiProvider === "groq" ? "Groq AI" : "Gemini AI"} + {voiceId} TTS
+                    </span>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Smartfon Home bar */}
             <div className="mx-auto mt-3 h-1 w-24 rounded-full bg-white/15" />
           </div>
 
@@ -738,6 +835,72 @@ export function VideoCreatorStudio({
           )}
         </div>
       </div>
+
+      {/* Style Sheet Preview Modal */}
+      {previewStyleModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200"
+          onClick={() => setPreviewStyleModal(null)}
+        >
+          <div
+            className="glass-panel w-full max-w-2xl rounded-3xl p-5 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-heading text-lg font-bold text-text">
+                    {previewStyleModal.name}
+                  </h3>
+                  <Badge tone="primary" className="text-[10px]">
+                    {previewStyleModal.tag}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted mt-1">{previewStyleModal.bestFor}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewStyleModal(null)}
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-xl bg-surface-2 text-muted hover:text-text"
+                aria-label="Yopish"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="overflow-hidden rounded-2xl border border-border bg-black">
+              <img
+                src={previewStyleModal.previewImage}
+                alt={previewStyleModal.name}
+                className="w-full max-h-[60vh] object-contain mx-auto"
+              />
+            </div>
+
+            <p className="text-xs text-muted leading-relaxed">{previewStyleModal.summary}</p>
+
+            <div className="flex items-center justify-end gap-2 pt-1">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setPreviewStyleModal(null)}
+              >
+                Yopish
+              </Button>
+              <Button
+                variant="gradient"
+                size="sm"
+                onClick={() => {
+                  handleSelectStyle(previewStyleModal);
+                  setPreviewStyleModal(null);
+                }}
+              >
+                <Check className="h-3.5 w-3.5" aria-hidden />
+                Shu uslubni tanlash
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

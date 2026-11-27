@@ -40,15 +40,15 @@ describe("Script Engine", () => {
     expect(script.captions.short).toBeDefined();
   });
 
-  it("buildScriptPrompt skill matnini o'z ichiga oladi", () => {
+  it("buildScriptPrompt tanlangan animatsiya uslubi qoidalarini o'z ichiga oladi", () => {
     const prompt = buildScriptPrompt({
-      topic: "Odatlar",
-      niche: "Rivojlanish",
-      skillText: "Standart o'zbek tili talaffuzi",
+      topic: "Nafasni ushlab turish",
+      niche: "Sog'lik",
+      styleId: "deep-dive",
     });
-    expect(prompt).toContain("Odatlar");
-    expect(prompt).toContain("Rivojlanish");
-    expect(prompt).toContain("Standart o'zbek tili talaffuzi");
+    expect(prompt).toContain("Nafasni ushlab turish");
+    expect(prompt).toContain("Deep Dive 3D");
+    expect(prompt).toContain("X-ray");
   });
 });
 
@@ -100,20 +100,22 @@ describe("QA Rules & Safety", () => {
 });
 
 describe("FFmpeg Renderer (ASS Subtitles)", () => {
-  it("to'g'ri ASS formatdagi subtitr va brend ma'lumotlarini generatsiya qiladi", () => {
+  it("to'g'ri ASS formatdagi subtitr, uslub rangi va brend ma'lumotlarini generatsiya qiladi", () => {
     const shotList = [
-      { id: 1, timeRange: "0-3s", type: "hook" as const, spokenText: "Ovoz matni", screenText: "Ekran matni", visualDirection: "Kadr" },
+      { id: 1, timeRange: "0-3s", type: "hook" as const, spokenText: "Ovoz matni", screenText: "Ekran *MATNI*", visualDirection: "Kadr" },
       { id: 2, timeRange: "3-15s", type: "body" as const, spokenText: "Asosiy", screenText: "Mavzu", visualDirection: "Kadr" },
       { id: 3, timeRange: "15-20s", type: "cta" as const, spokenText: "Obuna bo'ling", screenText: "CTA", visualDirection: "Kadr" },
     ];
 
-    const ass = buildAssSubtitles(shotList, "FokusUz", 20);
+    const ass = buildAssSubtitles(shotList, "FokusUz", 20, "night-file");
     expect(ass).toContain("[Script Info]");
     expect(ass).toContain("PlayResX: 1080");
     expect(ass).toContain("PlayResY: 1920");
     expect(ass).toContain("@fokusuz");
-    expect(ass).toContain("Ekran matni");
-    expect(ass).toContain("Obuna bo'ling • Saqlab qo'ying");
+    expect(ass).toContain("NIGHT FILE");
+    expect(ass).toContain("Courier New");
+    expect(ass).toContain("{\\c&H002626DC&}MATNI{\\c}");
+    expect(ass).toContain("1080×1920 AI Studio");
   });
 });
 

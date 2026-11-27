@@ -1,6 +1,7 @@
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { AiProvider } from "@autochannel/ai";
+import type { AnimationStyleId } from "./animation-styles";
 import { generateReelsScript, ReelsScript } from "./script-engine";
 import { validateScriptQa, QaResult } from "./qa-rules";
 import { renderReelsVideo, RenderResult } from "./renderer";
@@ -9,6 +10,7 @@ import { uploadVideoAndCover, StorageUploadResult } from "./storage";
 export interface CreateVideoOptions {
   topic: string;
   niche?: string;
+  styleId?: AnimationStyleId;
   skillText?: string;
   channelName?: string;
   voiceId?: string; // Gemini TTS ovozi: Puck, Kore, Fenrir, Aoede
@@ -43,6 +45,7 @@ export async function createVideoFromIdea(
   const {
     topic,
     niche = "Foydali Ma'lumotlar",
+    styleId = "deep-dive",
     skillText,
     channelName = "AutoChannel",
     voiceId = "Puck",
@@ -55,11 +58,12 @@ export async function createVideoFromIdea(
   const outputDir = options.outputDir ?? join(process.cwd(), "tmp", "render", runId);
   await mkdir(outputDir, { recursive: true });
 
-  // 1. Ssenariy generatsiyasi (Groq yoki Gemini)
-  console.log(`[generator] 1. Ssenariy generatsiya qilinmoqda (${textAiProvider.name})...`);
+  // 1. Ssenariy generatsiyasi (Groq yoki Gemini + tanlangan animatsiya uslubi)
+  console.log(`[generator] 1. Ssenariy generatsiya qilinmoqda (${textAiProvider.name}, uslub: ${styleId})...`);
   const script = await generateReelsScript(textAiProvider, {
     topic,
     niche,
+    styleId,
     skillText,
   });
 
@@ -112,6 +116,7 @@ export async function createVideoFromIdea(
     audioPath,
     shotList: script.shotList,
     channelName,
+    styleId,
     outputDir,
     durationSec: speech.durationSec,
     backgroundMedia,

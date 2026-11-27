@@ -1,4 +1,5 @@
 import type { AiProvider } from "@autochannel/ai";
+import { getAnimationStyle, type AnimationStyleId } from "./animation-styles";
 
 export interface SceneCue {
   id: number;
@@ -28,35 +29,42 @@ export interface ReelsScript {
 export interface ScriptGenerationInput {
   topic: string;
   niche: string;
+  styleId?: AnimationStyleId;
   skillText?: string;
   targetDurationSec?: number; // standart: 30-45s
 }
 
 /**
- * Gemini LLM uchun qat'iy ssenariy promptini shakllantiradi.
+ * AI (Groq / Gemini) uchun tanlangan animatsiya uslubi asosida ssenariy promptini shakllantiradi.
  */
 export function buildScriptPrompt(input: ScriptGenerationInput): string {
-  const { topic, niche, skillText, targetDurationSec = 35 } = input;
+  const { topic, niche, styleId, skillText, targetDurationSec = 35 } = input;
+  const styleProfile = styleId ? getAnimationStyle(styleId) : null;
+  const styleSection = styleProfile
+    ? `\n\n--- TANLANGAN ANIMATSIYA USLUBI (STYLE QOIDALARI) ---\n${styleProfile.aiGuide}\n--- USLUB QOIDALARI TUGADI ---\n`
+    : "";
   const skillSection = skillText
-    ? `\n\n--- VIDEO YARATISH QOIDALARI (FAOL SKILL) ---\n${skillText}\n--- SKILL TUGADI ---\n`
+    ? `\n\n--- QO'SHIMCHA YO'RIQNOMA ---\n${skillText}\n--- YO'RIQNOMA TUGADI ---\n`
     : "";
 
   return [
-    `Sen professional Instagram Reels ssenariynavis va virusli kontent bo'yicha mutaxassisisan.`,
+    `Sen professional qisqa videolar (Faceless Shorts / Reels) rejissyori va ssenariynavissisan.`,
     `Nisha: "${niche}"`,
-    `Reels mavzusi: "${topic}"`,
+    `Video mavzusi: "${topic}"`,
+    styleProfile ? `Animatsiya uslubi: "${styleProfile.name}" (${styleProfile.tag})` : "",
     `Maqsadli davomiylik: taxminan ${targetDurationSec} soniya.`,
     `Auditoriya: O'zbekiston yoshlari (18-35 yosh), o'zbek tilida (lotin yozuvi).`,
+    styleSection,
     skillSection,
     ``,
     `MUHIM TALABLAR:`,
-    `1. Hook (0-3 soniya): tomoshabinni birinchi 3 soniyada to'xtatadigan qiziqarli savol yoki kutilmagan fakt.`,
-    `2. Asosiy qism: ixcham, aniq, amaliy 2-3 ta asosiy fikr (suvli gaplarsiz).`,
-    `3. CTA (yakun): "Fikringizni izohlarda yozing", "Do'stingizga yuboring" yoki "Keyingi qism uchun obuna bo'ling".`,
-    `4. Ekran matnlari: qisqa, 3-6 so'zdan oshmasin.`,
-    `5. Ovozli matn: tabiiy o'zbek tilida, talaffuz qilishga qulay.`,
-    `6. 3 xil caption varianti (qisqa, interaktiv, hikoya).`,
-    `7. 5-8 ta nishaga oid hashtag.`,
+    `1. Hook (0-3 soniya): tomoshabinni birinchi 2-3 soniyada to'xtatadigan savol yoki hayratlanarli fakt.`,
+    `2. Jonli nutq va ritm: gaplar do'stga hikoya qilgandek tabiiy va bog'lovchili bo'lsin, kadrlar esa har 2-4 soniyada almashsin (6-8 ta shot).`,
+    `3. CTA (yakun): boshidagi hook bilan bog'lanadigan kuchli yakuniy xulosa.`,
+    `4. Ekran matnlari (screenText): qisqa (1-4 so'z), eng muhim 1 ta kalit so'zni *SO'Z* yulduzcha ichida belgilab ber.`,
+    `5. Ovozli matn (spokenText): tabiiy o'zbek tilida, talaffuz qilishga qulay, raqamlarni so'z bilan yoz.`,
+    `6. visualDirection: aynan tanlangan animatsiya uslubiga mos sahna va harakatni tasvirla.`,
+    `7. 3 xil caption varianti (qisqa, interaktiv, hikoya) va 5-8 ta hashtag.`,
     ``,
     `Faqat quyidagi JSON strukturasini qaytar:`,
     `{`,

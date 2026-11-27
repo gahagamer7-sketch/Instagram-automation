@@ -3,7 +3,6 @@ import { ShieldCheck } from "lucide-react";
 import { Alert } from "@/components/ui/alert";
 import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
-import { SettingsNav } from "@/components/settings/settings-nav";
 import { ProviderCard } from "@/components/settings/provider-card";
 import { listCredentials, type CredentialView } from "@/lib/credentials";
 import { PROVIDERS } from "@/lib/providers";
@@ -18,10 +17,8 @@ export default function SettingsPage() {
     <>
       <PageHeader
         title="Sozlamalar"
-        description="API kalitlar, xarajat limitlari va tizim ruxsatlari. Kalitlar serverda AES-256-GCM bilan shifrlanadi, brauzerga qaytarilmaydi va loglarga yozilmaydi."
+        description="Shaxsiy API kalitlaringiz va xarajat limitlari. Kalitlar serverda AES-256-GCM bilan shifrlanadi va boshqa foydalanuvchilarga ko'rinmaydi."
       />
-
-      <SettingsNav />
 
       <div className="mb-6 flex items-start gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-muted">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
