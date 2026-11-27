@@ -343,7 +343,7 @@ export function VideoCreatorStudio({
                 <div className="flex items-center justify-between w-full mb-1.5">
                   <span className="flex items-center gap-1.5 text-xs font-bold text-white">
                     <Zap className="h-4 w-4 fill-current text-primary" />
-                    Groq (Llama 3.3 70B)
+                    Groq AI (Avto-Model)
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     ⚡ ~1.2s Ultra-Tez
@@ -716,7 +716,7 @@ export function VideoCreatorStudio({
                   </div>
 
                   <div className="rounded-xl border border-border/60 bg-surface-2/40 p-2.5 text-[10px] text-muted">
-                    🚀 Groq Llama 3.3 + Gemini TTS
+                    🚀 Groq AI + Gemini TTS
                   </div>
                 </div>
               )}

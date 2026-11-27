@@ -27,7 +27,7 @@ export const PROVIDERS: ProviderMeta[] = [
     id: "groq",
     label: "Groq (AI — Ultra Tezkor)",
     description:
-      "Llama 3.3 70B modeli orqali ssenariylarni chaqmoqdek tezkor generatsiya qilish uchun.",
+      "API kalitingizdagi mavjud eng yaxshi modelni avtomatik aniqlab, ssenariylarni chaqmoqdek tezkor generatsiya qiladi.",
     keyLabel: "Groq API kaliti",
     docsUrl: "https://console.groq.com/keys",
     docsLabel: "console.groq.com",
