@@ -1,6 +1,5 @@
 import type { ComponentType } from "react";
 import {
-  ChartColumn,
   Clapperboard,
   Film,
   LayoutDashboard,
@@ -22,7 +21,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/reels/create", label: "Video Yaratish", icon: Clapperboard, mobile: true },
   { href: "/reels", label: "Mening Videolarim", icon: Film, mobile: true },
   { href: "/settings/skill", label: "Video Qoidalari (Skill)", icon: Palette },
-  { href: "/analytics", label: "Statistika", icon: ChartColumn, mobile: true },
   { href: "/settings", label: "Sozlamalar", icon: Settings, mobile: true },
 ];
 
