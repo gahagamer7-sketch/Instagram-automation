@@ -276,20 +276,20 @@ export function AnalyticsView({
             <div className="p-3 rounded-xl border border-border bg-surface-2 space-y-1">
               <span className="font-semibold text-success block flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                Joylash soati xulosasi:
+                Studio tavsiyasi:
               </span>
               <p className="text-text">
-                Toshkent vaqti bilan soat <strong>19:00</strong> auditoriya faolligi cho'qqisiga to'g'ri kelmoqda.
+                <strong>Groq AI + Gemini TTS</strong> juftligi bilan qisqa va dinamik videolar tez va sifatli chiqmoqda.
               </p>
             </div>
           </div>
 
           <div className="pt-2">
             <Link
-              href="/calendar"
+              href="/reels/create"
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-strong transition shadow-sm"
             >
-              Keyingi haftani rejalashtirish
+              Yangi video yaratish
               <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </div>

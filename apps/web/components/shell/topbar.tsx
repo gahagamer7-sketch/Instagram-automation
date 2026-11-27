@@ -22,7 +22,7 @@ export function Topbar() {
         </div>
 
         <p className="hidden text-xs font-medium text-muted xl:block">
-          🎬 AI Video Generator Studio — To&apos;liq avtomatlashgan 1080x1920 video ishlab chiqarish
+          🎬 AI Video Generator Studio — Professional 9:16 video yaratish
         </p>
 
         <div className="flex items-center gap-3">

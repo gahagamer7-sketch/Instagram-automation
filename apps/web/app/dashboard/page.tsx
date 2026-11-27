@@ -1,12 +1,12 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, Clapperboard, CircleCheck, Rocket, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Clapperboard, CircleCheck, Film, Rocket, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { CardSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { getDashboardData } from "@/lib/dashboard";
-import { formatDateTime, formatNumber, formatUsd } from "@/lib/format";
+import { formatNumber, formatUsd } from "@/lib/format";
 import { getSystemSnapshot } from "@/lib/system";
 import { getCurrentUser } from "@/lib/session";
 
@@ -42,18 +42,17 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {/* Video Yaratish bo'limi */}
           <Suspense fallback={<CardSkeleton lines={4} />}>
             <QuickVideoCard />
           </Suspense>
           <Suspense fallback={<CardSkeleton lines={5} />}>
             <SetupChecklist />
           </Suspense>
-          <PipelineCard />
+          <StudioWorkflowCard />
         </div>
         <div className="space-y-4">
           <Suspense fallback={<CardSkeleton lines={3} />}>
-            <QueueCard />
+            <StudioSummaryCard />
           </Suspense>
         </div>
       </div>
@@ -66,7 +65,7 @@ async function QuickVideoCard() {
     <Card className="border-primary/20">
       <CardHeader
         title="🎬 Video Yaratish Studiyasi"
-        description="G'oya va Skill asosida 1080x1920 formatdagi to'liq avtomatlashgan video yarating."
+        description="G'oya va AI qoidalari asosida 1080x1920 formatdagi tayyor video yarating."
         action={
           <Link href="/reels/create" className={buttonClass("gradient", "sm")}>
             <Clapperboard className="h-4 w-4" aria-hidden />
@@ -77,8 +76,8 @@ async function QuickVideoCard() {
       <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-border bg-surface-2 p-3">
           <p className="text-xs font-semibold text-muted">1-qadam</p>
-          <p className="mt-0.5 text-sm font-bold text-text">G'oya yozing</p>
-          <p className="text-xs text-muted">Video mavzusi yoki g'oyasini kiriting</p>
+          <p className="mt-0.5 text-sm font-bold text-text">G&apos;oya yozing</p>
+          <p className="text-xs text-muted">Video mavzusi yoki g&apos;oyasini kiriting</p>
         </div>
         <div className="rounded-xl border border-border bg-surface-2 p-3">
           <p className="text-xs font-semibold text-muted">2-qadam</p>
@@ -113,7 +112,7 @@ async function DashboardHeader() {
           )}
         </div>
         <p className="mt-1 text-xs text-muted">
-          AI Video Generator Studio — G&apos;oya kiriting va to&apos;liq video yarating
+          AI Video Generator Studio — G&apos;oya kiriting va professional video yarating
         </p>
       </div>
 
@@ -151,27 +150,29 @@ async function StatsGrid() {
   }
 
   const { data } = result;
+  const totalVideos =
+    data.pendingVideos + data.readyVideos + data.publishedVideos + data.failedVideos;
 
   const items = [
     {
-      title: "Keyingi Video",
-      value: data.nextScheduledAt ? formatDateTime(data.nextScheduledAt) : "—",
-      hint: data.nextScheduledAt ? "Jadval bo'yicha" : "Jadval hali bo'sh",
-    },
-    {
       title: "Jami yaratilgan videolar",
-      value: formatNumber(data.plays7d),
-      hint: "Video yaratish statistikasi",
+      value: formatNumber(totalVideos),
+      hint: "Sizning video kutubxonangiz",
     },
     {
       title: "Tayyor videolar",
-      value: formatNumber(data.followers),
-      hint: "Yuklab olishga tayyor",
+      value: formatNumber(data.readyVideos + data.publishedVideos),
+      hint: "Yuklab olishga tayyor MP4",
+    },
+    {
+      title: "Jarayondagi videolar",
+      value: formatNumber(data.pendingVideos),
+      hint: "Hozir ishlanmoqda",
     },
     {
       title: "Bugungi xarajat",
       value: formatUsd(data.todayCostUsd),
-      hint: "Bepul tarif limiti ichida",
+      hint: "Shaxsiy API hisobingiz bo'yicha",
     },
   ];
 
@@ -190,7 +191,6 @@ async function StatsGrid() {
 
 async function SetupChecklist() {
   const currentUser = await getCurrentUser();
-
   const snapshot = await getSystemSnapshot(currentUser?.user?.id);
 
   if (!snapshot.ok) {
@@ -206,33 +206,34 @@ async function SetupChecklist() {
 
   const steps = [
     {
-      label: "Gemini API kaliti kiritilgan",
+      label: "Gemini API kaliti kiritilgan (Ovoz TTS va Matn)",
       done: snapshot.connectedProviders.includes("gemini"),
       href: "/settings",
     },
     {
-      label: "Groq API kaliti kiritilgan (ixtiyoriy)",
+      label: "Groq API kaliti kiritilgan (Tezkor Ssenariy — ixtiyoriy)",
       done: snapshot.connectedProviders.includes("groq"),
       href: "/settings",
     },
     {
-      label: "Video Studio tayyor",
-      done: snapshot.connectedProviders.includes("gemini"),
-      href: "/reels/create",
+      label: "Pexels API kaliti kiritilgan (Fon videolari — ixtiyoriy)",
+      done: snapshot.connectedProviders.includes("pexels"),
+      href: "/settings",
     },
   ];
 
   const completed = steps.filter((s) => s.done).length;
+  const ready = snapshot.connectedProviders.includes("gemini");
 
   return (
     <Card>
       <CardHeader
-        title="Ishga tushirish ro'yxati"
-        description={`${completed}/${steps.length} qadam bajarilgan. Qolganlari Sozlamalar bo'limida bajariladi.`}
+        title="Shaxsiy API kalitlar holati"
+        description={`${completed}/${steps.length} ta kalit ulangan. Har bir foydalanuvchi o'z kaliti bilan ishlaydi.`}
         action={
-          <Badge tone={completed === steps.length ? "success" : "warning"}>
-            <StatusDot tone={completed === steps.length ? "success" : "warning"} />
-            {completed === steps.length ? "Tayyor" : "Sozlash kerak"}
+          <Badge tone={ready ? "success" : "warning"}>
+            <StatusDot tone={ready ? "success" : "warning"} />
+            {ready ? "Studiya tayyor" : "Kalit kerak"}
           </Badge>
         }
       />
@@ -263,7 +264,7 @@ async function SetupChecklist() {
                 href={step.href}
                 className="ml-auto inline-flex items-center gap-1 text-xs text-primary hover:underline"
               >
-                Bajarish
+                Sozlash
                 <ArrowRight className="h-3 w-3" aria-hidden />
               </Link>
             )}
@@ -285,17 +286,17 @@ async function SetupChecklist() {
   );
 }
 
-function PipelineCard() {
-  const steps = ["G'oya", "Ssenariy", "Ovoz", "Video", "QA", "Tayyor"];
+function StudioWorkflowCard() {
+  const steps = ["G'oya", "AI Ssenariy", "Gemini TTS Ovoz", "Subtitr & Montaj", "MP4 Yuklab olish"];
 
   return (
     <Card>
       <CardHeader
-        title="Jonli pipeline"
-        description="Har bir video shu bosqichlardan to'liq avtomatik o'tadi va yuklab olishga tayyor bo'ladi."
+        title="Video yaratish jarayoni"
+        description="Studiyada yaratilgan har bir video shu bosqichlardan o'tib tayyor MP4 faylga aylanadi."
         action={
-          <Link href="/pipeline" className="text-sm text-primary hover:underline">
-            Batafsil
+          <Link href="/reels/create" className="text-sm text-primary hover:underline">
+            Studiyaga o&apos;tish
           </Link>
         }
       />
@@ -318,29 +319,36 @@ function PipelineCard() {
   );
 }
 
-async function QueueCard() {
+async function StudioSummaryCard() {
   const currentUser = await getCurrentUser();
   const result = await getDashboardData(currentUser?.channel?.id);
 
   if (!result.ok) {
     return (
       <Card>
-        <CardHeader title="Navbat" description="Baza bilan aloqa yo'q" />
+        <CardHeader title="Videolar holati" description="Baza bilan aloqa yo'q" />
       </Card>
     );
   }
 
   const { data } = result;
   const rows = [
+    { label: "Yuklab olishga tayyor", value: data.readyVideos + data.publishedVideos, tone: "success" as const },
     { label: "Ishlov berilmoqda", value: data.pendingVideos, tone: "primary" as const },
-    { label: "Yuklab olishga tayyor", value: data.readyVideos, tone: "warning" as const },
-    { label: "Yakunlangan", value: data.publishedVideos, tone: "success" as const },
-    { label: "Xato", value: data.failedVideos, tone: "danger" as const },
+    { label: "Xatolik", value: data.failedVideos, tone: "danger" as const },
   ];
 
   return (
     <Card>
-      <CardHeader title="Studiyadagi videolar" description="Video statuslari bo'yicha" />
+      <CardHeader
+        title="Mening videolarim"
+        description="Studiyadagi video fayllar"
+        action={
+          <Link href="/reels" className="text-xs text-primary hover:underline">
+            Barchasi
+          </Link>
+        }
+      />
       <ul className="mt-4 space-y-3">
         {rows.map((row) => (
           <li key={row.label} className="flex items-center justify-between gap-3 text-sm">
@@ -353,7 +361,7 @@ async function QueueCard() {
         ))}
       </ul>
       <p className="mt-4 flex items-center gap-2 text-xs text-muted">
-        <Rocket className="h-3.5 w-3.5" aria-hidden />
+        <Film className="h-3.5 w-3.5" aria-hidden />
         9:16 Full HD (1080x1920) MP4 eksport
       </p>
       <p className="mt-2 flex items-center gap-2 text-xs text-muted">

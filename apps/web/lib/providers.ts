@@ -8,16 +8,16 @@ export interface ProviderMeta {
   /** Kalitni qayerdan olish mumkin (foydalanuvchi uchun havola). */
   docsUrl?: string;
   docsLabel?: string;
-  /** "Ulanishni tekshirish" hozircha qo'llab-quvvatlanadimi. */
+  /** "Ulanishni tekshirish" qo'llab-quvvatlanadimi. */
   testable: boolean;
 }
 
 export const PROVIDERS: ProviderMeta[] = [
   {
     id: "gemini",
-    label: "Gemini (AI)",
+    label: "Gemini (AI va Ovoz TTS)",
     description:
-      "Ssenariy, g'oyalar va o'zbekcha ovoz (TTS). Tizimning asosiy AI va ovoz kaliti.",
+      "Ssenariy va tabiiy o'zbekcha diktor ovozi (TTS) generatsiyasi uchun asosiy shaxsiy kalitingiz.",
     keyLabel: "Gemini API kaliti",
     docsUrl: "https://aistudio.google.com/apikey",
     docsLabel: "aistudio.google.com",
@@ -35,20 +35,11 @@ export const PROVIDERS: ProviderMeta[] = [
   },
   {
     id: "pexels",
-    label: "Pexels",
-    description: "Bepul stock video va rasmlar.",
+    label: "Pexels (Fon Video va Rasmlar)",
+    description: "Videolar uchun bepul vertikal stock video va rasmlar (ixtiyoriy).",
     keyLabel: "Pexels API kaliti",
     docsUrl: "https://www.pexels.com/api/",
     docsLabel: "pexels.com/api",
-    testable: true,
-  },
-  {
-    id: "telegram",
-    label: "Telegram bot",
-    description: "Bildirishnomalar va yarim avto rejimda tasdiqlash.",
-    keyLabel: "Bot token",
-    docsUrl: "https://core.telegram.org/bots#botfather",
-    docsLabel: "BotFather",
     testable: true,
   },
 ];

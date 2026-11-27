@@ -5,12 +5,7 @@ import { prisma } from "@autochannel/db";
 export type SystemSnapshot =
   | {
       ok: true;
-      paused: boolean;
-      pauseReason: string | null;
-      autoMode: boolean;
-      dailyReelsMax: number;
       connectedProviders: string[];
-      hasChannel: boolean;
     }
   | { ok: false; error: string };
 
@@ -23,31 +18,16 @@ async function loadSystemSnapshot(userId?: string): Promise<SystemSnapshot> {
   }
 
   try {
-    const channelWhere = userId
-      ? { userId, igUserId: { not: null }, status: "active" as const }
-      : { igUserId: { not: null }, status: "active" as const };
-
-    const [settings, connected, connectedChannelCount] = await Promise.all([
-      prisma.appSetting.findFirst(),
-      userId
-        ? prisma.apiCredential.findMany({
-            where: { userId, status: "connected" },
-            select: { provider: true },
-          })
-        : Promise.resolve([]),
-      prisma.channel.count({
-        where: channelWhere,
-      }),
-    ]);
+    const connected = userId
+      ? await prisma.apiCredential.findMany({
+          where: { userId, status: "connected" },
+          select: { provider: true },
+        })
+      : [];
 
     return {
       ok: true,
-      paused: settings?.paused ?? false,
-      pauseReason: settings?.pauseReason ?? null,
-      autoMode: settings?.autoMode ?? true,
-      dailyReelsMax: settings?.dailyReelsMax ?? 1,
       connectedProviders: connected.map((c) => c.provider),
-      hasChannel: connectedChannelCount > 0,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -59,7 +39,6 @@ async function loadSystemSnapshot(userId?: string): Promise<SystemSnapshot> {
 }
 
 /**
- * Yuqori paneldagi holat indikatori uchun yagona o'qish.
- * `cache` — bir so'rov ichida takroriy o'qishlarni birlashtiradi.
+ * Joriy foydalanuvchining shaxsiy AI kalitlari holatini yuklaydi.
  */
 export const getSystemSnapshot = cache(loadSystemSnapshot);

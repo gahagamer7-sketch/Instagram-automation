@@ -3,10 +3,7 @@ import {
   parseScriptResponse,
   buildScriptPrompt,
   validateScriptQa,
-  parsePlannerResponse,
-  buildPlannerPrompt,
   buildAssSubtitles,
-  FORBIDDEN_WORDS,
 } from "./index";
 
 describe("Script Engine", () => {
@@ -99,26 +96,6 @@ describe("QA Rules & Safety", () => {
     const qa = validateScriptQa(dangerousScript);
     expect(qa.passed).toBe(false);
     expect(qa.violations.some((v) => v.includes("Taqiqlangan so'zlar"))).toBe(true);
-  });
-});
-
-describe("Content Planner", () => {
-  it("rejalashtirilgan g'oyalar ro'yxatini to'g'ri parslaydi", () => {
-    const raw = JSON.stringify([
-      { topic: "Mavzu 1", hookPremise: "Hook 1", category: "Tavsiya", dayOffset: 1 },
-      { topic: "Mavzu 2", hookPremise: "Hook 2", category: "Fakt", dayOffset: 2 },
-    ]);
-
-    const ideas = parsePlannerResponse(raw, "Biznes", 2);
-    expect(ideas).toHaveLength(2);
-    expect(ideas[0]!.topic).toBe("Mavzu 1");
-    expect(ideas[0]!.category).toBe("Tavsiya");
-  });
-
-  it("planner prompti nishani o'z ichiga oladi", () => {
-    const prompt = buildPlannerPrompt("Sun'iy Intellekt", undefined, 10);
-    expect(prompt).toContain("Sun'iy Intellekt");
-    expect(prompt).toContain("10 ta");
   });
 });
 

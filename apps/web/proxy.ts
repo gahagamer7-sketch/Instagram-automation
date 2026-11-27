@@ -4,16 +4,13 @@ import { SESSION_COOKIE, verifySessionToken } from "./lib/auth";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Ochiq marshrutlar: landing page (/), login, register, Next.js statik fayllari, cron, OAuth
+  // Ochiq marshrutlar: landing page (/), login, register, media va Next.js statik fayllari
   const isPublicRoute =
     pathname === "/" ||
     pathname === "/login" ||
     pathname === "/register" ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/api/cron") ||
     pathname.startsWith("/api/media") ||
-    pathname.startsWith("/api/auth/meta") ||
-    pathname.startsWith("/api/auth/instagram") ||
     pathname === "/favicon.ico" ||
     pathname.match(/\.(svg|png|jpg|jpeg|gif|webp|ico)$/);
 

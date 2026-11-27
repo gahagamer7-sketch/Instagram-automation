@@ -1,13 +1,11 @@
-import { Pause, Play } from "lucide-react";
-import { toggleSystem } from "@/app/actions/system";
+import Link from "next/link";
+import { KeyRound, Sparkles } from "lucide-react";
 import { Badge, StatusDot } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { getSystemSnapshot } from "@/lib/system";
 import { getCurrentUser } from "@/lib/session";
 
 /**
- * Tizim holati + "To'xtatish" tugmasi (TZ 4.5, 4.12).
- * Baza javob bermasa ham panel yiqilmaydi — holat "ulanmagan" bo'lib qoladi.
+ * Topbar'dagi foydalanuvchining AI Studiya tayyorlik holati.
  */
 export async function SystemStatus() {
   const currentUser = await getCurrentUser();
@@ -27,51 +25,33 @@ export async function SystemStatus() {
   }
 
   const aiReady = snapshot.connectedProviders.includes("gemini");
-  const running = !snapshot.paused && aiReady;
 
   return (
     <div className="flex items-center gap-2">
-      <Badge
-        tone={snapshot.paused ? "danger" : running ? "success" : "warning"}
-        className="max-w-56 truncate"
-      >
-        <StatusDot
-          tone={snapshot.paused ? "danger" : running ? "success" : "warning"}
-          pulse={running}
-        />
+      <Badge tone={aiReady ? "success" : "warning"} className="max-w-56 truncate">
+        <StatusDot tone={aiReady ? "success" : "warning"} pulse={aiReady} />
         <span className="truncate">
-          {snapshot.paused
-            ? "To'xtatilgan"
-            : running
-              ? "Ishlayapti"
-              : "Sozlash kerak"}
+          {aiReady ? "AI Studiya tayyor" : "API kalit kerak"}
         </span>
       </Badge>
 
-      <form action={toggleSystem}>
-        <Button
-          type="submit"
-          size="sm"
-          variant={snapshot.paused ? "primary" : "danger"}
-          title={
-            snapshot.paused
-              ? "Tizimni qayta ishga tushirish"
-              : "Tizimni darhol to'xtatish"
-          }
+      {!aiReady ? (
+        <Link
+          href="/settings"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition"
         >
-          {snapshot.paused ? (
-            <>
-              <Play className="h-4 w-4" aria-hidden />
-              Davom ettirish
-            </>
-          ) : (
-            <>
-              <Pause className="h-4 w-4" aria-hidden />
-              To&apos;xtatish
-            </>
-          )}
-        </Button>
-      </form>
+          <KeyRound className="h-3.5 w-3.5" aria-hidden />
+          <span className="hidden sm:inline">Kalit kiritish</span>
+        </Link>
+      ) : (
+        <Link
+          href="/reels/create"
+          className="inline-flex items-center gap-1.5 rounded-xl gradient-brand px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:brightness-110 transition"
+        >
+          <Sparkles className="h-3.5 w-3.5" aria-hidden />
+          <span className="hidden sm:inline">Video yaratish</span>
+        </Link>
+      )}
     </div>
   );
 }

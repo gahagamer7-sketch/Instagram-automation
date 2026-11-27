@@ -139,11 +139,11 @@ export function BrandStudio({
               {isSaving ? "Saqlanmoqda..." : "Brendni saqlash va qo'llash"}
             </Button>
             <Link
-              href="/calendar"
+              href="/reels/create"
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3.5 py-2 text-sm font-semibold text-text hover:border-primary/50 hover:text-primary transition"
             >
               <Calendar className="h-4 w-4 text-primary" />
-              Kalendarga o'tish
+              Video Studiyaga o&apos;tish
             </Link>
           </div>
         </div>
