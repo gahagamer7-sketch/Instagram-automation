@@ -34,25 +34,6 @@ export const PROVIDERS: ProviderMeta[] = [
     testable: true,
   },
   {
-    id: "meta",
-    label: "Meta / Instagram",
-    description:
-      "Instagram Business akkauntni ulash va Reels joylash uchun access token.",
-    keyLabel: "Meta / Instagram Access Token",
-    docsUrl: "https://developers.facebook.com/apps",
-    docsLabel: "developers.facebook.com",
-    testable: true,
-  },
-  {
-    id: "youtube",
-    label: "YouTube Data",
-    description: "Nisha kashfiyotida mostPopular (UZ) signali uchun.",
-    keyLabel: "YouTube API kaliti",
-    docsUrl: "https://console.cloud.google.com/apis/credentials",
-    docsLabel: "console.cloud.google.com",
-    testable: true,
-  },
-  {
     id: "pexels",
     label: "Pexels",
     description: "Bepul stock video va rasmlar.",
