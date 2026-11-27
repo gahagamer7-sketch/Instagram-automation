@@ -17,10 +17,20 @@ export const PROVIDERS: ProviderMeta[] = [
     id: "gemini",
     label: "Gemini (AI)",
     description:
-      "Ssenariy, tahlil, g'oyalar va o'zbekcha ovoz (TTS). Tizimning asosiy AI kaliti.",
+      "Ssenariy, g'oyalar va o'zbekcha ovoz (TTS). Tizimning asosiy AI va ovoz kaliti.",
     keyLabel: "Gemini API kaliti",
     docsUrl: "https://aistudio.google.com/apikey",
     docsLabel: "aistudio.google.com",
+    testable: true,
+  },
+  {
+    id: "groq",
+    label: "Groq (AI — Ultra Tezkor)",
+    description:
+      "Llama 3.3 70B modeli orqali ssenariylarni chaqmoqdek tezkor generatsiya qilish uchun.",
+    keyLabel: "Groq API kaliti",
+    docsUrl: "https://console.groq.com/keys",
+    docsLabel: "console.groq.com",
     testable: true,
   },
   {

@@ -11,6 +11,8 @@ import {
   AlertCircle,
   FileText,
   Volume2,
+  Download,
+  Play,
 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -70,13 +72,22 @@ export function ReelsGrid({ items = [] }: { items: ReelCardItem[] }) {
           ))}
         </div>
 
-        <Link
-          href="/calendar"
-          className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-semibold text-white hover:bg-primary-strong transition shadow-sm"
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          Kalendarga o'tish
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/reels/create"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-white hover:bg-primary-strong transition shadow-sm"
+          >
+            <Clapperboard className="h-3.5 w-3.5" />
+            + Yangi Video Yasash
+          </Link>
+          <Link
+            href="/calendar"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-surface-2 transition"
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            Kalendar
+          </Link>
+        </div>
       </div>
 
       {/* Grid: 9:16 Reels Kartalari */}
@@ -154,23 +165,34 @@ export function ReelsGrid({ items = [] }: { items: ReelCardItem[] }) {
                   )}
 
                   <div className="pt-2 border-t border-border flex items-center justify-between gap-2">
-                    {item.scriptText ? (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setSelectedReel(item)}
-                        className="w-full text-xs gap-1.5"
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setSelectedReel(item)}
+                      className="text-xs gap-1.5 flex-1"
+                    >
+                      {item.fileUrl ? (
+                        <>
+                          <Play className="h-3.5 w-3.5 text-primary" />
+                          Ko&apos;rish
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-3.5 w-3.5 text-primary" />
+                          Ssenariy
+                        </>
+                      )}
+                    </Button>
+
+                    {item.fileUrl && (
+                      <a
+                        href={item.fileUrl}
+                        download={`${item.topic || "video"}.mp4`}
+                        className="inline-flex items-center justify-center p-2 rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition"
+                        title="Videoni yuklab olish (MP4)"
                       >
-                        <FileText className="h-3.5 w-3.5 text-primary" />
-                        Ssenariyni o'qish
-                      </Button>
-                    ) : (
-                      <Link
-                        href="/calendar"
-                        className="w-full text-center text-xs font-semibold text-primary py-1.5 hover:underline"
-                      >
-                        Kalendarda yozish →
-                      </Link>
+                        <Download className="h-3.5 w-3.5" />
+                      </a>
                     )}
                   </div>
                 </div>
@@ -216,6 +238,28 @@ export function ReelsGrid({ items = [] }: { items: ReelCardItem[] }) {
                 ✕
               </Button>
             </div>
+
+            {selectedReel.fileUrl && (
+              <div className="flex flex-col items-center gap-3 py-2 border-b border-border">
+                <div className="w-full max-w-[240px] aspect-[9/16] rounded-xl overflow-hidden bg-black shadow-xl border border-border">
+                  <video
+                    src={selectedReel.fileUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <a
+                  href={selectedReel.fileUrl}
+                  download={`${selectedReel.topic || "video"}.mp4`}
+                  className="w-full max-w-[240px] inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow hover:bg-primary-strong transition"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Videoni yuklab olish (MP4)
+                </a>
+              </div>
+            )}
 
             <div>
               <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">

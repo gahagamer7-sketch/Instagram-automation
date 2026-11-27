@@ -4,6 +4,7 @@ import {
   CalendarDays,
   Clapperboard,
   Compass,
+  Film,
   LayoutDashboard,
   ListChecks,
   Palette,
@@ -19,14 +20,15 @@ export interface NavItem {
   mobile?: boolean;
 }
 
-/** Sahifalar ro'yxati — TZ 4.12. */
+/** Sahifalar ro'yxati */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, mobile: true },
-  { href: "/pipeline", label: "Jonli pipeline", icon: Workflow, mobile: true },
-  { href: "/reels", label: "Reels kutubxonasi", icon: Clapperboard, mobile: true },
+  { href: "/reels/create", label: "Video Yaratish", icon: Clapperboard, mobile: true },
+  { href: "/reels", label: "Mening Videolarim", icon: Film, mobile: true },
+  { href: "/settings/skill", label: "Video Qoidalari (Skill)", icon: Palette },
+  { href: "/pipeline", label: "Jonli pipeline", icon: Workflow },
   { href: "/calendar", label: "Kontent kalendar", icon: CalendarDays },
   { href: "/niche", label: "Nisha tahlili", icon: Compass },
-  { href: "/brand", label: "Brend studiyasi", icon: Palette },
   { href: "/analytics", label: "Statistika", icon: ChartColumn, mobile: true },
   { href: "/logs", label: "Navbat va loglar", icon: ListChecks },
   { href: "/settings", label: "Sozlamalar", icon: Settings, mobile: true },

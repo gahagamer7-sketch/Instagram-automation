@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ArrowRight, CircleCheck, Rocket, ShieldCheck } from "lucide-react";
+import { ArrowRight, Clapperboard, CircleCheck, Rocket, ShieldCheck, Sparkles } from "lucide-react";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -9,26 +9,6 @@ import { getDashboardData } from "@/lib/dashboard";
 import { formatDateTime, formatNumber, formatUsd } from "@/lib/format";
 import { getSystemSnapshot } from "@/lib/system";
 import { getCurrentUser } from "@/lib/session";
-import { ConnectedAccountsCard } from "@/components/dashboard/connected-accounts-card";
-
-function InstagramIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-    </svg>
-  );
-}
 
 export const metadata = {
   title: "Dashboard — AutoChannel",
@@ -62,9 +42,9 @@ export default function DashboardPage() {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {/* OpusClip-style Connected Instagram Accounts section */}
+          {/* Video Yaratish bo'limi */}
           <Suspense fallback={<CardSkeleton lines={4} />}>
-            <ConnectedAccountsSection />
+            <QuickVideoCard />
           </Suspense>
           <Suspense fallback={<CardSkeleton lines={5} />}>
             <SetupChecklist />
@@ -81,26 +61,43 @@ export default function DashboardPage() {
   );
 }
 
-async function ConnectedAccountsSection() {
-  const currentUser = await getCurrentUser();
-  const channels = (currentUser?.channels || []).map((c) => ({
-    id: c.id,
-    name: c.name,
-    handle: c.handle,
-    igUserId: c.igUserId,
-    profilePictureUrl: c.profilePictureUrl,
-    accountType: c.accountType,
-    status: c.status,
-    createdAt: c.createdAt.toISOString(),
-  }));
-
-  return <ConnectedAccountsCard channels={channels} />;
+async function QuickVideoCard() {
+  return (
+    <Card className="border-primary/20">
+      <CardHeader
+        title="🎬 Video Yaratish Studiyasi"
+        description="G'oya va Skill asosida 1080x1920 formatdagi to'liq avtomatlashgan video yarating."
+        action={
+          <Link href="/reels/create" className={buttonClass("gradient", "sm")}>
+            <Clapperboard className="h-4 w-4" aria-hidden />
+            Yangi Video Yasash
+          </Link>
+        }
+      />
+      <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border bg-surface-2 p-3">
+          <p className="text-xs font-semibold text-muted">1-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-text">G'oya yozing</p>
+          <p className="text-xs text-muted">Video mavzusi yoki g'oyasini kiriting</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface-2 p-3">
+          <p className="text-xs font-semibold text-muted">2-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-text">AI Tanlang</p>
+          <p className="text-xs text-muted">Groq (tezkor) yoki Gemini (kuchli)</p>
+        </div>
+        <div className="rounded-xl border border-border bg-surface-2 p-3">
+          <p className="text-xs font-semibold text-muted">3-qadam</p>
+          <p className="mt-0.5 text-sm font-bold text-text">Video yuklab oling</p>
+          <p className="text-xs text-muted">MP4 formatida tayyor video</p>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
 async function DashboardHeader() {
   const currentUser = await getCurrentUser();
   const user = currentUser?.user;
-  const channel = currentUser?.channel;
 
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -116,36 +113,22 @@ async function DashboardHeader() {
           )}
         </div>
         <p className="mt-1 text-xs text-muted">
-          {channel
-            ? `${channel.name} (${channel.handle ? `@${channel.handle}` : "Instagram"}) uchun shaxsiy tahlil va navbat`
-            : "Reels avtomatlashtirish shaxsiy boshqaruv paneli"}
+          AI Video Generator Studio — G&apos;oya kiriting va to&apos;liq video yarating
         </p>
       </div>
 
       <div className="flex items-center gap-2">
-        {channel?.handle ? (
-          <Link
-            href="/onboarding?step=4"
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-1.5 text-xs text-text hover:border-pink-500/40 transition group"
-            title="Instagram sozlamalarini ko'rish yoki boshqarish"
-          >
-            <InstagramIcon className="h-3.5 w-3.5 text-pink-500" />
-            <span className="font-medium">@{channel.handle}</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          </Link>
-        ) : (
-          <Link
-            href="/onboarding?step=4"
-            className="flex items-center gap-1.5 rounded-xl border border-pink-500/30 bg-pink-500/10 px-3 py-1.5 text-xs font-medium text-pink-500 hover:bg-pink-500/20 transition"
-          >
-            <InstagramIcon className="h-3.5 w-3.5" />
-            <span>Continue with Instagram</span>
-          </Link>
-        )}
+        <Link
+          href="/reels/create"
+          className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>Video Yaratish</span>
+        </Link>
 
-        <Link href="/onboarding" className={buttonClass("gradient", "sm")}>
+        <Link href="/settings" className={buttonClass("gradient", "sm")}>
           <Rocket className="h-4 w-4" aria-hidden />
-          Onboarding
+          Sozlamalar
         </Link>
       </div>
     </div>
@@ -171,19 +154,19 @@ async function StatsGrid() {
 
   const items = [
     {
-      title: "Keyingi Reels",
+      title: "Keyingi Video",
       value: data.nextScheduledAt ? formatDateTime(data.nextScheduledAt) : "—",
       hint: data.nextScheduledAt ? "Jadval bo'yicha" : "Jadval hali bo'sh",
     },
     {
-      title: "7 kunlik ko'rishlar",
+      title: "Jami yaratilgan videolar",
       value: formatNumber(data.plays7d),
-      hint: "Instagram Insights tahlili",
+      hint: "Video yaratish statistikasi",
     },
     {
-      title: "Obunachilar",
+      title: "Tayyor videolar",
       value: formatNumber(data.followers),
-      hint: "O'sish dinamikasi",
+      hint: "Yuklab olishga tayyor",
     },
     {
       title: "Bugungi xarajat",
@@ -207,10 +190,6 @@ async function StatsGrid() {
 
 async function SetupChecklist() {
   const currentUser = await getCurrentUser();
-  const channel = currentUser?.channel;
-  const isInstagramConnected = Boolean(
-    channel?.igUserId && channel?.status === "active",
-  );
 
   const snapshot = await getSystemSnapshot(currentUser?.user?.id);
 
@@ -232,9 +211,9 @@ async function SetupChecklist() {
       href: "/settings",
     },
     {
-      label: "Instagram Business akkaunt ulangan",
-      done: isInstagramConnected,
-      href: "/onboarding?step=4",
+      label: "Groq API kaliti kiritilgan (ixtiyoriy)",
+      done: snapshot.connectedProviders.includes("groq"),
+      href: "/settings",
     },
     {
       label: "Avtomatik rejim yoqilgan",
@@ -312,13 +291,13 @@ async function SetupChecklist() {
 }
 
 function PipelineCard() {
-  const steps = ["G'oya", "Ssenariy", "Ovoz", "Video", "QA", "Joylash"];
+  const steps = ["G'oya", "Ssenariy", "Ovoz", "Video", "QA", "Tayyor"];
 
   return (
     <Card>
       <CardHeader
         title="Jonli pipeline"
-        description="Har bir Reels shu bosqichlardan to'liq avtomatik o'tadi va Instagram'ga e'lon qilinadi."
+        description="Har bir video shu bosqichlardan to'liq avtomatik o'tadi va yuklab olishga tayyor bo'ladi."
         action={
           <Link href="/pipeline" className="text-sm text-primary hover:underline">
             Batafsil

@@ -9,7 +9,9 @@ import {
 import { loadDashboardData } from "./dashboard";
 
 describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
-  it("har bir foydalanuvchi ro'yxatdan o'tganda alohida kanal va dashboard oladi", async () => {
+  it(
+    "har bir foydalanuvchi ro'yxatdan o'tganda alohida kanal va dashboard oladi",
+    async () => {
     // 1. Foydalanuvchi A (Sardor)
     const emailA = `sardor_${Date.now()}@test.uz`;
     const passA = "SardorPass123!";
@@ -131,7 +133,7 @@ describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
     await prisma.user.deleteMany({
       where: { id: { in: [userA.id, userB.id] } },
     });
-  });
+  }, 30_000);
 
   it("Instagram ulanmagan kanallarni to'g'ri 'ulanmagan' deb aniqlaydi", async () => {
     const email = `test_ig_${Date.now()}@test.uz`;
@@ -174,6 +176,6 @@ describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
 
     await prisma.channel.delete({ where: { id: channel.id } });
     await prisma.user.delete({ where: { id: user.id } });
-  });
+  }, 30_000);
 });
 

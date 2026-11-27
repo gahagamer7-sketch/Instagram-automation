@@ -30,11 +30,12 @@ export async function uploadMediaFile(
   // Lokal fallback (bepul dev muhit yoki token kiritilmaganda)
   const localDir = join(process.cwd(), "tmp", "uploads");
   await mkdir(localDir, { recursive: true });
-  const localFilePath = join(localDir, pathname.replace(/\//g, "_"));
+  const localFileName = pathname.replace(/\//g, "_");
+  const localFilePath = join(localDir, localFileName);
   await writeFile(localFilePath, data);
 
-  // Lokal URL yoki fayl yo'li qaytariladi
-  return `file://${localFilePath.replace(/\\/g, "/")}`;
+  // Brauzer orqali to'g'ridan-to'g'ri o'ynash va yuklab olish uchun URL
+  return `/api/media/${localFileName}`;
 }
 
 /**

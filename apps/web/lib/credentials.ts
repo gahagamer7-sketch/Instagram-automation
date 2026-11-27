@@ -95,6 +95,9 @@ export async function testCredential(id: string): Promise<{
   if (row.provider === "gemini") {
     const provider = createProvider("gemini", decrypt(row.encryptedKey, encKey));
     result = await provider.checkConnection();
+  } else if (row.provider === "groq") {
+    const provider = createProvider("groq", decrypt(row.encryptedKey, encKey));
+    result = await provider.checkConnection();
   } else if (row.provider === "youtube") {
     const yt = new YouTubeProvider(decrypt(row.encryptedKey, encKey));
     result = await yt.checkConnection();
@@ -125,17 +128,67 @@ export type ProviderLookup =
 
 /**
  * AI chaqiruvi uchun tayyor provayder (kalit deshifrlanadi).
- * Kalit yo'q bo'lsa — bosqich "kalit kerak" holatida to'xtaydi (TZ 4.10).
+ * preferredProvider bo'yicha Gemini yoki Groq tanlanadi.
  */
-export async function getAiProvider(): Promise<ProviderLookup> {
+export async function getAiProvider(
+  preferredProvider: "gemini" | "groq" = "gemini",
+): Promise<ProviderLookup> {
+  try {
+    const encKey = getEncryptionKey();
+    let row = await prisma.apiCredential.findUnique({ where: { provider: preferredProvider } });
+    if (!row) {
+      const fallback = preferredProvider === "groq" ? "gemini" : "groq";
+      row = await prisma.apiCredential.findUnique({ where: { provider: fallback } });
+    }
+    if (!row) {
+      const envKey = preferredProvider === "gemini" ? process.env.GEMINI_API_KEY : process.env.GROQ_API_KEY;
+      if (envKey) {
+        return {
+          ok: true,
+          provider: createProvider(preferredProvider, envKey),
+          credentialId: "env",
+        };
+      }
+      return {
+        ok: false,
+        message:
+          "AI kaliti kiritilmagan. Sozlamalar → API kalitlar bo'limida Gemini yoki Groq kalitini kiriting va tekshiring.",
+      };
+    }
+    return {
+      ok: true,
+      provider: createProvider(row.provider, decrypt(row.encryptedKey, encKey)),
+      credentialId: row.id,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+/**
+ * Ovoz (TTS) sintezi uchun har doim Gemini provayderini qaytaradi.
+ * Chunki Groq faqat matn yozadi, tabiiy o'zbekcha diktor ovozi Gemini orqali qilinadi.
+ */
+export async function getGeminiTtsProvider(): Promise<ProviderLookup> {
   try {
     const encKey = getEncryptionKey();
     const row = await prisma.apiCredential.findUnique({ where: { provider: "gemini" } });
     if (!row) {
+      const envKey = process.env.GEMINI_API_KEY;
+      if (envKey) {
+        return {
+          ok: true,
+          provider: createProvider("gemini", envKey),
+          credentialId: "env",
+        };
+      }
       return {
         ok: false,
         message:
-          "Gemini kaliti kiritilmagan. Sozlamalar → API kalitlar bo'limida kalitni kiriting va tekshiring.",
+          "Gemini API kaliti topilmadi. Ovoz (TTS) sintezi uchun Sozlamalarda Gemini kaliti kiritilishi shart.",
       };
     }
     return {
