@@ -20,9 +20,9 @@ import {
 import { buttonClass } from "@/components/ui/button";
 
 export const metadata = {
-  title: "AutoChannel — Instagram Reels uchun 100% Avtomatik Kanal Tizimi",
+  title: "AutoChannel — AI Video Studio",
   description:
-    "O'zbek auditoriyasiga mo'ljallangan avtonom Reels kanali: nisha kashfiyoti, brend, ssenariy, ovoz, FFmpeg montaj, joylash va tahlil.",
+    "O'zbek tilidagi professional AI Video Studio: nisha kashfiyoti, brend, ssenariy, tabiiy TTS ovoz, 9:16 FFmpeg montaj va yuklab olish.",
 };
 
 export default function LandingPage() {
@@ -90,55 +90,54 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary">
                 <Zap className="h-3.5 w-3.5 text-accent-cyan" />
-                <span>O&apos;zbekistonda 1-to&apos;liq avtonom Reels AI tizimi</span>
+                <span>O&apos;zbekistonda 1-professional AI Video Studio</span>
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-text leading-[1.12]">
-                Instagram Reels Kanalingizni{" "}
+                G&apos;oyadan Tayyor Videogacha{" "}
                 <span className="bg-gradient-to-r from-primary via-indigo-400 to-accent-cyan bg-clip-text text-transparent">
-                  100% Avtopilotga
-                </span>{" "}
-                Qo&apos;ying
+                  AI Video Studio
+                </span>
               </h1>
 
               <p className="text-base sm:text-lg text-muted max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Nisha kashfiyoti, virusli ssenariylar, o&apos;zbekcha tabiiy ovoz, 1080x1920 video montaji, dinamik subtitrlar va Instagram&apos;ga har kungi avto-joylash — bir marta sozlang va tizim uzluksiz ishlaydi.
+                Mavzu kiriting — Groq AI va Gemini ssenariy yozadi, Gemini TTS o&apos;zbek tilida tabiiy ovoz beradi, FFmpeg esa 1080x1920 9:16 formatda dinamik subtitrli tayyor MP4 videoni yaratib beradi.
               </p>
 
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
                 <Link
-                  href="/dashboard"
+                  href="/reels/create"
                   className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition px-6 py-3.5 text-sm gradient-brand text-white shadow-[0_8px_24px_rgba(37,99,235,0.4)] hover:brightness-110"
                 >
-                  <span>Boshqaruv panelini ochish</span>
+                  <span>Video Studiyani ochish</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
 
                 <Link
-                  href="/onboarding"
+                  href="/dashboard"
                   className="inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition px-5 py-3.5 text-sm border border-border bg-surface-2 text-text hover:border-primary/50 hover:text-primary"
                 >
-                  <span>5 bosqichli Onboarding</span>
+                  <span>Boshqaruv paneli</span>
                 </Link>
               </div>
 
               {/* Statistika ko'rsatkichlari */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 border-t border-border/80">
                 <div className="p-3 rounded-xl bg-surface/60 border border-border">
-                  <span className="nums block text-xl font-bold text-text">25 ta</span>
-                  <span className="text-[11px] text-muted">Reels/kun limit</span>
+                  <span className="nums block text-xl font-bold text-text">9:16</span>
+                  <span className="text-[11px] text-muted">1080x1920 Full HD</span>
                 </div>
                 <div className="p-3 rounded-xl bg-surface/60 border border-border">
                   <span className="nums block text-xl font-bold text-success">$0</span>
-                  <span className="text-[11px] text-muted">Bepul tariflar</span>
+                  <span className="text-[11px] text-muted">Bepul API kalitlar</span>
                 </div>
                 <div className="p-3 rounded-xl bg-surface/60 border border-border">
-                  <span className="nums block text-xl font-bold text-text">&lt; 15 daq</span>
-                  <span className="text-[11px] text-muted">Render tezligi</span>
+                  <span className="nums block text-xl font-bold text-text">~1.2s</span>
+                  <span className="text-[11px] text-muted">Groq ssenariy tezligi</span>
                 </div>
                 <div className="p-3 rounded-xl bg-surface/60 border border-border">
-                  <span className="nums block text-xl font-bold text-primary">100%</span>
-                  <span className="text-[11px] text-muted">Avtomatizatsiya</span>
+                  <span className="nums block text-xl font-bold text-primary">4 ovoz</span>
+                  <span className="text-[11px] text-muted">Gemini o&apos;zbekcha TTS</span>
                 </div>
               </div>
             </div>
@@ -155,7 +154,7 @@ export default function LandingPage() {
                   <div className="flex items-center justify-between text-[11px]">
                     <div className="flex items-center gap-1.5 rounded-full bg-black/60 px-2.5 py-1 text-white backdrop-blur">
                       <span className="h-2 w-2 rounded-full bg-success animate-pulse" />
-                      <span className="font-semibold text-[10px]">AI AVTOPILOT</span>
+                      <span className="font-semibold text-[10px]">AI VIDEO STUDIO</span>
                     </div>
                     <span className="text-white/70 text-[10px] font-mono">1080x1920 60FPS</span>
                   </div>
@@ -210,10 +209,10 @@ export default function LandingPage() {
               Ishlash Tamoyili
             </h2>
             <h3 className="text-3xl sm:text-4xl font-extrabold text-text">
-              G&apos;oyadan Instagram Reels&apos;gacha 5 Bosqich
+              G&apos;oyadan Tayyor Videogacha 5 Bosqich
             </h3>
             <p className="text-sm text-muted">
-              Har bir bosqich avtomatlashtirilgan bo&apos;lib, xatolikka chidamli va resumable holatda ishlaydi.
+              Har bir bosqich studiya ichida bir tugma bilan bajariladi va tayyor MP4 fayl sifatida beriladi.
             </p>
           </div>
 
@@ -221,14 +220,14 @@ export default function LandingPage() {
             {[
               {
                 step: "01",
-                title: "Nisha & Trendlar",
-                desc: "YouTube (UZ) va AI orqali eng yuqori talabga ega mavzular aniqlanadi.",
+                title: "G'oya & Mavzu",
+                desc: "Mavzuni kiriting yoki AI trend g'oyalar generatoridan tanlang.",
                 icon: Cpu,
               },
               {
                 step: "02",
-                title: "AI Ssenariy & QA",
-                desc: "0-3s hook, shot-list va Meta qoidalariga muvofiqlik tekshiruvi.",
+                title: "AI Ssenariy & Hook",
+                desc: "Groq AI yoki Gemini 0-3s viral hook va shot-list yaratadi.",
                 icon: Bot,
               },
               {
@@ -240,13 +239,13 @@ export default function LandingPage() {
               {
                 step: "04",
                 title: "FFmpeg Montaj",
-                desc: "1080x1920 9:16 video, rangli ASS subtitrlar va brend watermark.",
+                desc: "1080x1920 9:16 video, rangli ASS subtitrlar va Pexels stock fon.",
                 icon: Layers,
               },
               {
                 step: "05",
-                title: "Meta Avto-joylash",
-                desc: "Reels container yaratiladi va jadval bo'yicha e'lon qilinadi.",
+                title: "MP4 Yuklab Olish",
+                desc: "Tayyor video va muqovani (cover) kompyuteringizga yuklab oling.",
                 icon: Share2,
               },
             ].map((item) => {
@@ -322,14 +321,14 @@ export default function LandingPage() {
                   autochannel: "FFmpeg render (45 soniya)",
                 },
                 {
-                  task: "Joylash intizomi",
-                  traditional: "Esdan chiqadi, vaqt o'tadi",
-                  autochannel: "Cron orqali aniq 19:00 da",
+                  task: "Tayyor video olish",
+                  traditional: "Soatlab render kutish",
+                  autochannel: "MP4 va Cover darhol tayyor",
                 },
                 {
                   task: "Inson omili / uzilish",
                   traditional: "Kasallik, charchoq, ta'tillar",
-                  autochannel: "24/7 to'xtovsiz rejim",
+                  autochannel: "24/7 tezkor AI studiya",
                 },
               ].map((row) => (
                 <div key={row.task} className="grid grid-cols-3 p-4 items-center">
@@ -366,9 +365,9 @@ export default function LandingPage() {
                 badge: "Google AI",
               },
               {
-                title: "Meta Instagram Graph API",
-                desc: "Rasmiy OAuth 2.0 orqali kuniga 25 tagacha Reels bepul joylash imkoniyati.",
-                badge: "Meta Official",
+                title: "Groq AI (Avto-Model)",
+                desc: "API kalitingizdagi eng kuchli modelni avtomatik tanlab, ssenariyni ~1.2 soniyada yozadi.",
+                badge: "Ultra Fast",
               },
               {
                 title: "FFmpeg 1080x1920 Render",
@@ -420,8 +419,8 @@ export default function LandingPage() {
           <div className="space-y-4">
             {[
               {
-                q: "Instagram akkauntim bloklanib qolmaydimi?",
-                a: "Yo'q! AutoChannel norasmiy bot yoki login/parolli skriptlar ishlatmaydi. Tizim Meta'ning rasmiy Instagram Graph API'si orqali ishlaydi va Meta'ning barcha xavfsizlik talablariga mos keladi.",
+                q: "Har bir foydalanuvchi o'z API kaliti bilan ishlaydimi?",
+                a: "Ha! Har bir akkaunt o'zining shaxsiy Gemini, Groq va Pexels API kalitlarini AES-256-GCM shifrlash bilan saqlaydi. Kalitlar boshqa foydalanuvchilarga umuman ko'rinmaydi.",
               },
               {
                 q: "O'zbek tili talaffuzi qanchalik tabiiy?",
@@ -429,7 +428,7 @@ export default function LandingPage() {
               },
               {
                 q: "Haqiqatan ham bepulmi?",
-                a: "Ha! Tizim Gemini bepul kvotasi, Meta rasmiy bepul kvotasi (25 Reels/kun), GitHub Actions va Vercel Hobby tariflari doirasida ishlab chiqilgan. Shuning uchun oylik xarajat 0$ bo'ladi.",
+                a: "Ha! Tizim Gemini va Groq bepul API kvotalari doirasida ishlaydi. Shaxsiy API kalitingizni ulab bemalol video yaratishingiz mumkin.",
               },
               {
                 q: "Ssenariylarni o'zim ko'rib, tahrirlay olamanmi?",
@@ -461,11 +460,11 @@ export default function LandingPage() {
           </div>
 
           <h3 className="text-3xl sm:text-5xl font-extrabold text-text tracking-tight">
-            Bugunoq O&apos;zingizning Avtomat Kanalingizni Yarating
+            Bugunoq O&apos;zingizning AI Video Studiyangizni Ishga Tushiring
           </h3>
 
           <p className="text-sm sm:text-base text-muted max-w-xl mx-auto">
-            Onboarding orqali API kalitlaringizni ulang, nishangizni tanlang va qolganini AutoChannel&apos;ga topshiring.
+            Shaxsiy API kalitingizni kiriting, mavzu yozing va bir necha soniyada professional 9:16 video yarating.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
@@ -493,17 +492,17 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <span className="font-semibold text-text">AutoChannel</span>
             <span>·</span>
-            <span>Instagram Reels Avtomatlashtirish Tizimi</span>
+            <span>AI Video Generator Studio</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="hover:text-text transition">
-              Admin Login
+              Tizimga kirish
             </Link>
             <Link href="/dashboard" className="hover:text-text transition">
               Dashboard
             </Link>
-            <Link href="/onboarding" className="hover:text-text transition">
-              Onboarding
+            <Link href="/reels/create" className="hover:text-text transition">
+              Video Studio
             </Link>
           </div>
           <p className="text-[11px] opacity-75">

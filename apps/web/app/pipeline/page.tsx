@@ -18,7 +18,7 @@ export default function PipelinePage() {
     <>
       <PageHeader
         title="Jonli pipeline"
-        description="Reels ishlab chiqarish bosqichlari, navbatdagi ishlar va xatoliklar nazorati (TZ 4.12)."
+        description="Video yaratish bosqichlari, navbatdagi ishlar va xatoliklar nazorati."
       />
 
       <Suspense fallback={<CardSkeleton lines={6} />}>

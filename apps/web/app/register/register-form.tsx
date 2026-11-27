@@ -31,7 +31,7 @@ export function RegisterForm() {
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-text">Hisob yaratish</h1>
         <p className="mt-1.5 text-xs text-muted">
-          AutoChannel bilan shaxsiy avtomatlashtirilgan Instagram kanalingizni oching
+          AutoChannel AI Video Studio&apos;da shaxsiy hisobingizni oching
         </p>
       </div>
 
@@ -169,7 +169,7 @@ export function RegisterForm() {
             ) : (
               <>
                 <Sparkles className="h-4 w-4" />
-                <span>Ro&apos;yxatdan o&apos;tish va kanal ochish</span>
+                <span>Ro&apos;yxatdan o&apos;tish va studiyaga kirish</span>
                 <ArrowRight className="h-4 w-4" />
               </>
             )}

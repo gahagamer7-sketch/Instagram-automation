@@ -20,7 +20,7 @@ export default function AnalyticsPage() {
     <>
       <PageHeader
         title="Statistika va tahlil"
-        description="Instagram Insights: ko'rishlar, reach, saqlashlar, obunachilar o'sishi va AI tavsiyalari (TZ 4.7)."
+        description="AI Video Studio ko'rsatkichlari: yaratilgan videolar, davomiylik va AI xarajatlari."
       />
 
       <Suspense fallback={<CardSkeleton lines={6} />}>

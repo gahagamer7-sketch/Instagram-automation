@@ -76,7 +76,7 @@ export function PipelineView({
     { key: "render", label: "Render", icon: Film, count: stageCounts.render },
     { key: "qa", label: "QA Nazorati", icon: ShieldCheck, count: stageCounts.qa },
     { key: "ready", label: "Tayyor", icon: CheckCircle2, count: stageCounts.ready },
-    { key: "published", label: "Joylangan", icon: Share2, count: stageCounts.published },
+    { key: "published", label: "Yakunlangan", icon: Share2, count: stageCounts.published },
   ];
 
   const handleRetry = async (jobId: string) => {

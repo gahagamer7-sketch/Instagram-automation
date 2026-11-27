@@ -90,6 +90,6 @@ export async function registerAction(
     };
   }
 
-  redirect("/onboarding");
+  redirect("/reels/create");
 }
 

@@ -68,7 +68,7 @@ export async function discoverNichesAction(
         ? `\n\nSkill (video qoidalari):\n${skillText.slice(0, 2000)}`
         : "";
       const prompt = [
-        "O'zbekiston auditoriyasi (18-34 yosh) uchun Instagram Reels nisha nomzodlarini",
+        "O'zbekiston auditoriyasi (18-34 yosh) uchun qisqa videolar (Reels / Shorts / TikTok) nisha nomzodlarini",
         "10 ta taklif ber. Har biriga qisqa sabab yoz.",
         "Format: faqat ro'yxat, har qator bitta nomzod.",
         "Mavzular: bilim, sog'lik, texnologiya, biznes, mashg'ulotlar, oila, yoshlar.",

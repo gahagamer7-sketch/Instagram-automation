@@ -532,7 +532,7 @@ export async function finishOnboardingAction(): Promise<{ ok: boolean; message: 
     refresh();
     return {
       ok: true,
-      message: "Tabriklaymiz! AutoChannel to'liq avtomatik rejimda ishga tushirildi.",
+      message: "Tabriklaymiz! AI Video Studio foydalanishga tayyor.",
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

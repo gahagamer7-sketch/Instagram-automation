@@ -6,16 +6,16 @@ import { OnboardingWizard, type OnboardingState } from "@/components/onboarding/
 import { getCurrentUser } from "@/lib/session";
 
 export const metadata = {
-  title: "Tizimni ishga tushirish (Onboarding) — AutoChannel",
-  description: "5 bosqichli sozlash: API kalitlar, nisha, brend, Instagram ulash va avtomatik rejim (TZ 4.11).",
+  title: "Studiya sozlamasi — AutoChannel",
+  description: "4 bosqichli studiya sozlamasi: shaxsiy API kalitlar, nisha, brend va ishga tushirish.",
 };
 
 export default function OnboardingPage() {
   return (
     <>
       <PageHeader
-        title="Tizimni ishga tushirish (Onboarding)"
-        description="5 bosqichli sozlash: API kalitlar, nisha, brend, Instagram ulash va avtomatik rejim (TZ 4.11)."
+        title="Studiya sozlamasi"
+        description="4 bosqichli sozlash: shaxsiy API kalitlar, nisha, brend va AI Video Studiyani ochish."
       />
 
       <Suspense fallback={<CardSkeleton lines={6} />}>
@@ -43,17 +43,11 @@ async function OnboardingContent() {
     userChannel
       ? prisma.channel.findUnique({
           where: { id: userChannel.id },
-          include: { brandKit: true, oauthToken: true },
+          include: { brandKit: true },
         })
       : null,
     prisma.appSetting.findFirst(),
   ]);
-
-  const hasInstagram = Boolean(
-    channel?.igUserId &&
-    channel.status === "active" &&
-    (channel.oauthToken?.accessToken || channel.igUserId),
-  );
 
   const state: OnboardingState = {
     hasGeminiKey: Boolean(geminiCred && geminiCred.status === "connected"),
@@ -61,9 +55,7 @@ async function OnboardingContent() {
     nicheName: channel?.niche ?? null,
     hasBrand: Boolean(channel?.brandKitId),
     brandName: channel?.brandKit?.chosenName ?? channel?.name ?? null,
-    hasInstagram,
-    igUserId: channel?.igUserId ?? null,
-    isOnboarded: Boolean(settings?.onboardedAt && hasInstagram),
+    isOnboarded: Boolean(settings?.onboardedAt || geminiCred?.status === "connected"),
   };
 
   return <OnboardingWizard initial={state} />;

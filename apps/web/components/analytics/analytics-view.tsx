@@ -123,7 +123,7 @@ export function AnalyticsView({
               Kontent Dinamikasi (7 kunlik)
             </h3>
             <p className="text-xs text-muted mt-0.5">
-              Instagram Insights ma'lumotlari asosidagi kunlik ko'rsatkichlar.
+              Video Studio ko&apos;rsatkichlari asosidagi kunlik dinamika.
             </p>
           </div>
 

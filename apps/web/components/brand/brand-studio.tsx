@@ -230,7 +230,7 @@ export function BrandStudio({
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-text text-sm flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" />
-              Instagram Bio
+              Kanal / Profil Bio
             </h3>
             <span
               className={`nums text-xs font-semibold ${
@@ -244,11 +244,11 @@ export function BrandStudio({
             rows={3}
             value={brand.bio}
             onChange={(e) => setBrand({ ...brand, bio: e.target.value })}
-            placeholder="Instagram profilingiz bio qismi..."
+            placeholder="Kanal yoki brendingiz haqida qisqacha bio..."
             className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none resize-none"
           />
           <p className="text-xs text-muted">
-            Onboarding paytida nusxa olib Instagram akkauntga joylashtiriladi.
+            Video muqovalari va kanal tavsifida ishlatiladi.
           </p>
         </Card>
       </div>

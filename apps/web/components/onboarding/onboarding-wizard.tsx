@@ -8,26 +8,18 @@ import {
   KeyRound,
   Compass,
   Palette,
-  Share2,
   ArrowRight,
   ShieldCheck,
   Clock,
   Sparkles,
-  ExternalLink,
-  ChevronDown,
-  ChevronUp,
+  Clapperboard,
 } from "lucide-react";
 import { useState, useTransition, useEffect } from "react";
-import {
-  connectInstagramAction,
-  disconnectInstagramAction,
-  finishOnboardingAction,
-} from "@/app/onboarding/actions";
+import { finishOnboardingAction } from "@/app/onboarding/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
-import { InstagramConnectModal } from "./instagram-connect-modal";
 
 export interface OnboardingState {
   hasGeminiKey: boolean;
@@ -35,8 +27,6 @@ export interface OnboardingState {
   nicheName: string | null;
   hasBrand: boolean;
   brandName: string | null;
-  hasInstagram: boolean;
-  igUserId: string | null;
   isOnboarded: boolean;
 }
 
@@ -47,54 +37,19 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
     if (!initial.hasGeminiKey) return 1;
     if (!initial.hasNiche) return 2;
     if (!initial.hasBrand) return 3;
-    if (!initial.hasInstagram) return 4;
-    return 5;
+    return 4;
   });
 
-  // Step 4 form
-  const [token, setToken] = useState("");
-  const [igUserId, setIgUserId] = useState(initial.igUserId || "");
-  const [handle, setHandle] = useState("");
-  const [smartHandle, setSmartHandle] = useState("");
-  const [manualMode, setManualMode] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isConnecting, startConnecting] = useTransition();
   const [isFinishing, startFinishing] = useTransition();
   const [feedback, setFeedback] = useState<{ tone: "success" | "danger"; message: string } | null>(null);
-  const [isIgConnected, setIsIgConnected] = useState(initial.hasInstagram);
-  const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(null);
-  const [accountType, setAccountType] = useState<string | null>(null);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   useEffect(() => {
-    const instagramSuccess =
-      searchParams.get("instagram_success") || searchParams.get("meta_success");
-    const instagramError =
-      searchParams.get("instagram_error") || searchParams.get("meta_error");
     const stepParam = searchParams.get("step");
-    const handleParam = searchParams.get("handle");
-
     if (stepParam) {
       const s = Number(stepParam);
-      if (!Number.isNaN(s) && s >= 1 && s <= 5) {
+      if (!Number.isNaN(s) && s >= 1 && s <= 4) {
         setCurrentStep(s);
       }
-    }
-
-    if (instagramSuccess === "1") {
-      setIsIgConnected(true);
-      if (handleParam) setHandle(handleParam);
-      setFeedback({
-        tone: "success",
-        message: `Instagram Professional akkaunti (@${handleParam || "Instagram"}) muvaffaqiyatli ulandi!`,
-      });
-    } else if (instagramError) {
-      let msg = instagramError;
-      if (instagramError === "missing_app_id") {
-        msg =
-          "Instagram App ID sozlanmagan. Iltimos, Meta App Dashboard orqali Instagram App ID kiriting.";
-      }
-      setFeedback({ tone: "danger", message: msg });
     }
   }, [searchParams]);
 
@@ -102,51 +57,8 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
     { num: 1, label: "API Kalitlar", done: initial.hasGeminiKey, icon: KeyRound },
     { num: 2, label: "Nisha", done: initial.hasNiche, icon: Compass },
     { num: 3, label: "Brend", done: initial.hasBrand, icon: Palette },
-    { num: 4, label: "Instagram", done: isIgConnected, icon: Share2 },
-    { num: 5, label: "Ishga tushirish", done: initial.isOnboarded, icon: Rocket },
+    { num: 4, label: "Studiyani ochish", done: initial.isOnboarded, icon: Rocket },
   ];
-
-  const handleSmartConnect = () => {
-    setFeedback(null);
-    startConnecting(async () => {
-      const target = smartHandle.trim() || handle.trim();
-      if (!target) {
-        setFeedback({ tone: "danger", message: "Iltimos, Instagram username (@handle) kiriting." });
-        return;
-      }
-      const res = await connectInstagramAction({
-        mode: "smart",
-        handle: target,
-      });
-
-      if (res.ok) {
-        setIsIgConnected(true);
-        const clean = target.replace(/^@+/, "");
-        setHandle(clean);
-        setFeedback({ tone: "success", message: res.message });
-      } else {
-        setFeedback({ tone: "danger", message: res.message });
-      }
-    });
-  };
-
-  const handleConnect = () => {
-    setFeedback(null);
-    startConnecting(async () => {
-      const res = await connectInstagramAction({
-        accessToken: token,
-        igUserId,
-        handle,
-      });
-
-      if (res.ok) {
-        setIsIgConnected(true);
-        setFeedback({ tone: "success", message: res.message });
-      } else {
-        setFeedback({ tone: "danger", message: res.message });
-      }
-    });
-  };
 
   const handleFinish = () => {
     setFeedback(null);
@@ -155,8 +67,8 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
       if (res.ok) {
         setFeedback({ tone: "success", message: res.message });
         setTimeout(() => {
-          window.location.href = "/pipeline";
-        }, 1500);
+          window.location.href = "/reels/create";
+        }, 900);
       } else {
         setFeedback({ tone: "danger", message: res.message });
       }
@@ -165,17 +77,16 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
 
   return (
     <div className="space-y-6">
-      {/* 5-Bosqichli Progress Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      {/* 4-Bosqichli Progress Bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {steps.map((s) => {
-          const Icon = s.icon;
           const isCurrent = currentStep === s.num;
           return (
             <button
               key={s.num}
               type="button"
               onClick={() => setCurrentStep(s.num)}
-              className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 ${
+              className={`p-3 rounded-2xl border text-left transition flex items-center gap-3 cursor-pointer ${
                 isCurrent
                   ? "border-primary bg-primary/10 shadow-sm"
                   : s.done
@@ -218,9 +129,9 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
         <Card className="p-6 space-y-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-bold text-text text-lg">1-Qadam: AI Kalitlarni Sozlash</h3>
+              <h3 className="font-bold text-text text-lg">1-Qadam: Shaxsiy AI Kalitlarni Sozlash</h3>
               <p className="text-xs text-muted mt-1">
-                Gemini API kaliti ssenariy, matn tahlili va o&apos;zbekcha ovoz (TTS) uchun asosiy hisoblanadi.
+                Har bir foydalanuvchi o&apos;zining shaxsiy Gemini (ovoz va matn) va Groq (tezkor ssenariy) kalitini kiritadi.
               </p>
             </div>
             <KeyRound className="h-6 w-6 text-primary" />
@@ -231,7 +142,9 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
               <Badge tone={initial.hasGeminiKey ? "success" : "warning"}>
                 {initial.hasGeminiKey ? "Ulangan" : "Ulanmagan"}
               </Badge>
-              <span className="text-xs text-text font-medium">Gemini API kaliti (Google AI Studio)</span>
+              <span className="text-xs text-text font-medium">
+                Gemini va Groq API kalitlari (Sozlamalar bo&apos;limi)
+              </span>
             </div>
             <Link
               href="/settings"
@@ -260,9 +173,9 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
         <Card className="p-6 space-y-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-bold text-text text-lg">2-Qadam: Viral Nishani Tanlash</h3>
+              <h3 className="font-bold text-text text-lg">2-Qadam: Video Nishasini Tanlash</h3>
               <p className="text-xs text-muted mt-1">
-                YouTube va AI signallari asosida eng yuqori talabga ega nisha tanlanadi.
+                AI yordamida eng yuqori talabga ega kontent yo&apos;nalishingizni tanlang.
               </p>
             </div>
             <Compass className="h-6 w-6 text-primary" />
@@ -272,7 +185,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
             <div>
               <p className="text-sm font-semibold text-text">Tanlangan nisha</p>
               <p className="text-xs text-muted mt-0.5">
-                {initial.nicheName ? initial.nicheName : "Hali nisha tanlanmagan"}
+                {initial.nicheName ? initial.nicheName : "Hali nisha tanlanmagan (ixtiyoriy)"}
               </p>
             </div>
             {initial.hasNiche ? (
@@ -282,7 +195,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                 href="/niche"
                 className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
               >
-                Nisha kashfiyotchisiga o&apos;tish
+                Nisha tanlashga o&apos;tish
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             )}
@@ -305,9 +218,9 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
         <Card className="p-6 space-y-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-bold text-text text-lg">3-Qadam: Brend Paketi</h3>
+              <h3 className="font-bold text-text text-lg">3-Qadam: Brend Uslubi</h3>
               <p className="text-xs text-muted mt-1">
-                Kanal nomi, slogan, bio va 1080x1080 vektorli avatar tayyorlandi.
+                Videolaringizdagi muallif nomi, rang palitrasi va vizual uslubni sozlang.
               </p>
             </div>
             <Palette className="h-6 w-6 text-primary" />
@@ -317,7 +230,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
             <div>
               <p className="text-sm font-semibold text-text">Brend holati</p>
               <p className="text-xs text-muted mt-0.5">
-                {initial.brandName ? `Kanal: ${initial.brandName}` : "Brend kiti tayyorlanmagan"}
+                {initial.brandName ? `Brend: ${initial.brandName}` : "Brend uslubi sozlanmagan (ixtiyoriy)"}
               </p>
             </div>
             {initial.hasBrand ? (
@@ -338,318 +251,50 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
               Orqaga
             </Button>
             <Button variant="gradient" onClick={() => setCurrentStep(4)} className="gap-2">
-              Keyingi qadam (Instagram)
+              Keyingi qadam (Studiyani ochish)
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </Card>
       )}
 
-      {/* 4-QADAM: Instagram Business Ulash (OAuth 1-klik yoki Manual) */}
+      {/* 4-QADAM: Video Studiyani Ishga Tushirish */}
       {currentStep === 4 && (
         <Card className="p-6 space-y-5">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="font-bold text-text text-lg">4-Qadam: Instagram Business Akkauntni Ulash</h3>
+              <h3 className="font-bold text-text text-lg">4-Qadam: AI Video Studio Tayyor</h3>
               <p className="text-xs text-muted mt-1">
-                Reels videolarni Graph API orqali avtomatik joylash uchun Meta OAuth yoki Access Token talab qilinadi (TZ 4.6).
+                Sozlamalar yakunlandi. Endi studiyada g&apos;oya yozib, bir tugma bilan 9:16 video yaratishingiz mumkin.
               </p>
             </div>
-            <Share2 className="h-6 w-6 text-primary" />
-          </div>
-
-          {isIgConnected ? (
-            <div className="p-5 rounded-2xl border border-success/40 bg-success/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                {profilePictureUrl ? (
-                  <img
-                    src={profilePictureUrl}
-                    alt={handle || "Instagram"}
-                    className="h-12 w-12 rounded-full object-cover ring-2 ring-success/40"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-lg p-2.5">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-white">
-                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                    </svg>
-                  </div>
-                )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-text text-base">
-                      {handle ? `@${handle}` : "Instagram akkaunti"}
-                    </span>
-                    <span className="rounded-md bg-success/15 px-2 py-0.5 text-xs font-medium text-success border border-success/20">
-                      Ulangan (Active)
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted mt-0.5">
-                    {accountType || "Instagram Professional akkaunt (Graph API faol)"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => setIsModalOpen(true)}
-                  className="text-xs h-9"
-                >
-                  Qayta ulash
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={isDisconnecting}
-                  onClick={async () => {
-                    setIsDisconnecting(true);
-                    try {
-                      const res = await disconnectInstagramAction();
-                      if (res.ok) {
-                        setIsIgConnected(false);
-                        setHandle("");
-                        setProfilePictureUrl(null);
-                        setAccountType(null);
-                        setFeedback({ tone: "success", message: res.message });
-                      } else {
-                        setFeedback({ tone: "danger", message: res.message });
-                      }
-                    } finally {
-                      setIsDisconnecting(false);
-                    }
-                  }}
-                  className="text-xs h-9 text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                >
-                  {isDisconnecting ? "Uzilmoqda..." : "Akkauntni uzish"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Variant 1: Rasmiy Instagram Login for Business */}
-              <div className="p-5 rounded-2xl border border-pink-500/30 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-indigo-500/10 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] text-white shadow-lg p-2.5">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-full h-full text-white">
-                        <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-semibold text-text text-sm">
-                          Instagram API with Instagram Login
-                        </h4>
-                        <span className="rounded-md bg-pink-500/10 px-2 py-0.5 text-[10px] font-medium text-pink-400 border border-pink-500/20">
-                          Tavsiya etiladi
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted mt-0.5">
-                        Rasmiy Instagram OAuth dialogi orqali to&apos;g&apos;ridan-to&apos;g&apos;ri bog&apos;lanish.
-                      </p>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="gradient"
-                    onClick={() => setIsModalOpen(true)}
-                    className="gap-2 shrink-0 h-11 px-5 shadow-lg shadow-pink-500/20 font-bold tracking-wide"
-                  >
-                    <span>Continue with Instagram</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Variant 2: Tezkor Test Rejimi (@username orqali) */}
-              <div className="p-4 rounded-xl border border-border bg-surface-2 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface border border-border text-muted">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-text text-xs">
-                      Yoki test rejimi: Instagram @username orqali tezkor bog&apos;lash
-                    </h4>
-                    <p className="text-[11px] text-muted">
-                      Parol talab qilinmaydi. Tizimni sinab ko&apos;rish va videolarni yaratish uchun darhol bog&apos;laydi.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-2.5">
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={smartHandle}
-                      onChange={(e) => setSmartHandle(e.target.value)}
-                      placeholder="@sizning_kanalingiz"
-                      className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs text-text placeholder:text-muted/60 focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                  <Button
-                    variant="secondary"
-                    disabled={isConnecting}
-                    onClick={handleSmartConnect}
-                    className="gap-1.5 shrink-0 h-9 px-4 text-xs"
-                  >
-                    {isConnecting ? (
-                      <Clock className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                    )}
-                    <span>{isConnecting ? "Bog'lanmoqda..." : "Tezkor bog'lash"}</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Variant 3: Qo'lda kiritish (Manual) */}
-              <div className="border-t border-border pt-3">
-                <button
-                  type="button"
-                  onClick={() => setManualMode(!manualMode)}
-                  className="text-xs font-semibold text-muted hover:text-text transition flex items-center gap-1.5"
-                >
-                  {manualMode ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  <span>
-                    {manualMode
-                      ? "Qo'lda kiritishni yopish"
-                      : "Qo'lda Meta Graph API Token kiritish (Ishlab chiquvchilar uchun)"}
-                  </span>
-                </button>
-
-                {manualMode && (
-                  <div className="mt-4 space-y-4 rounded-xl border border-border bg-surface-2 p-4">
-                    <div className="text-xs text-muted space-y-1">
-                      <div className="font-semibold text-text text-xs flex items-center gap-1.5">
-                        <ExternalLink className="h-3.5 w-3.5 text-primary" />
-                        Qo&apos;lda ulanish bo&apos;yicha:
-                      </div>
-                      <p>1. Instagram akkauntingizni <strong>Business / Creator</strong> turiga o&apos;tkazing.</p>
-                      <p>2. Akkauntni Facebook sahifasiga ulang.</p>
-                      <p>3. Meta Graph API Explorer orqali <code>instagram_content_publish</code> huquqiga ega token oling.</p>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-muted block mb-1">
-                        Meta Graph API Access Token *
-                      </label>
-                      <input
-                        type="password"
-                        value={token}
-                        onChange={(e) => setToken(e.target.value)}
-                        placeholder="EAA..."
-                        className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-xs font-semibold text-muted block mb-1">
-                          Instagram Business User ID *
-                        </label>
-                        <input
-                          type="text"
-                          value={igUserId}
-                          onChange={(e) => setIgUserId(e.target.value)}
-                          placeholder="178414..."
-                          className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-muted block mb-1">
-                          Instagram Handle (username)
-                        </label>
-                        <input
-                          type="text"
-                          value={handle}
-                          onChange={(e) => setHandle(e.target.value)}
-                          placeholder="@autochannel.uz"
-                          className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="pt-2">
-                      <Button
-                        variant="primary"
-                        disabled={isConnecting || !token.trim() || !igUserId.trim()}
-                        onClick={handleConnect}
-                        className="gap-2"
-                      >
-                        {isConnecting ? (
-                          <Clock className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Share2 className="h-4 w-4" />
-                        )}
-                        {isConnecting ? "Tekshirilmoqda..." : "Ulanishni tekshirish va saqlash"}
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          <div className="flex justify-between pt-2 border-t border-border">
-            <Button variant="secondary" onClick={() => setCurrentStep(3)}>
-              Orqaga
-            </Button>
-            <Button
-              variant="gradient"
-              disabled={!isIgConnected}
-              onClick={() => setCurrentStep(5)}
-              className="gap-2"
-            >
-              Keyingi qadam (Ishga tushirish)
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {/* 5-QADAM: Avtomatik rejimni yoqish */}
-      {currentStep === 5 && (
-        <Card className="p-6 space-y-5">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="font-bold text-text text-lg">5-Qadam: Avtomatik Rejimni Yoqish</h3>
-              <p className="text-xs text-muted mt-1">
-                Barcha bosqichlar tayyor. Endi kanalni to&apos;liq avtomatik rejimga o&apos;tkazishingiz mumkin.
-              </p>
-            </div>
-            <Rocket className="h-6 w-6 text-success" />
+            <Clapperboard className="h-6 w-6 text-success" />
           </div>
 
           <div className="p-4 rounded-xl border border-border bg-surface-2 space-y-2 text-xs">
             <div className="font-semibold text-text text-sm flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-primary" />
-              Tizim quyidagi tartibda ishlaydi:
+              Studiyada video yaratish tartibi:
             </div>
-            <p>1. Har kuni avtomatik ravishda yangi dolzarb mavzular topiladi.</p>
-            <p>2. AI ssenariy yozadi va Gemini TTS o&apos;zbek tilida ovoz beradi.</p>
-            <p>3. FFmpeg orqali 1080x1920 9:16 formatida video va dinamik subtitrlar render qilinadi.</p>
-            <p>4. Video QA tekshiruvidan o&apos;tgach, Instagram Reels sifatida e&apos;lon qilinadi.</p>
-            <p>5. Har bir bosqich va natija bo&apos;yicha Telegram botingizga hisobot yuboriladi.</p>
+            <p>1. Mavzu yoki g&apos;oya kiritasiz (yoki AI trend g&apos;oyalardan tanlaysiz).</p>
+            <p>2. Groq AI yoki Gemini 2.0 Flash ssenariy va kuchli hook yozib beradi.</p>
+            <p>3. Gemini TTS o&apos;zbek tilida tabiiy diktor ovozini sintez qiladi.</p>
+            <p>4. FFmpeg 1080x1920 9:16 formatda dinamik subtitrli video montaj qiladi.</p>
+            <p>5. Tayyor MP4 video va muqovani (cover) kompyuterga yuklab olasiz.</p>
           </div>
 
           <div className="p-4 rounded-xl border border-border bg-surface flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-muted">
               <ShieldCheck className="h-4 w-4 text-success" />
-              <span>Avto-pauza himoyasi yoqilgan (xatolik bo&apos;lsa to&apos;xtatiladi).</span>
+              <span>Barcha API kalitlaringiz shaxsiy hisobingizda AES-256-GCM bilan himoyalangan.</span>
             </div>
             <Badge tone={initial.isOnboarded ? "success" : "neutral"}>
-              {initial.isOnboarded ? "Avto-rejim faol" : "Kutilmoqda"}
+              {initial.isOnboarded ? "Tayyor" : "Sozlash"}
             </Badge>
           </div>
 
           <div className="flex justify-between pt-2">
-            <Button variant="secondary" onClick={() => setCurrentStep(4)}>
+            <Button variant="secondary" onClick={() => setCurrentStep(3)}>
               Orqaga
             </Button>
             <Button
@@ -663,65 +308,11 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
               ) : (
                 <Rocket className="h-4 w-4" />
               )}
-              {isFinishing ? "Faollashtirilmoqda..." : "Avtomatik rejimni yoqish va boshlash"}
+              {isFinishing ? "Ochilmoqda..." : "Video Studiyani Ochish"}
             </Button>
           </div>
         </Card>
       )}
-
-      {/* Rasmiy Instagram Ulanish Modali */}
-      <InstagramConnectModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        connectedAccount={{
-          handle: handle || undefined,
-          igUserId: igUserId || undefined,
-          profilePictureUrl: profilePictureUrl || undefined,
-          accountType: accountType || undefined,
-        }}
-        onDisconnect={async () => {
-          const res = await disconnectInstagramAction();
-          if (res.ok) {
-            setIsIgConnected(false);
-            setHandle("");
-            setIgUserId("");
-            setProfilePictureUrl(null);
-            setAccountType(null);
-            setFeedback({ tone: "success", message: res.message });
-            setIsModalOpen(false);
-          } else {
-            setFeedback({ tone: "danger", message: res.message });
-          }
-        }}
-        onSuccess={(data) => {
-          setIsIgConnected(true);
-          setHandle(data.handle);
-          setIgUserId(data.igUserId);
-          if (data.profilePictureUrl) setProfilePictureUrl(data.profilePictureUrl);
-          if (data.accountType) setAccountType(data.accountType);
-          setFeedback({
-            tone: "success",
-            message: `Instagram Professional akkaunti (@${data.handle}) muvaffaqiyatli ulandi!`,
-          });
-          setIsModalOpen(false);
-        }}
-        onSmartConnect={async (handleVal) => {
-          setSmartHandle(handleVal);
-          const res = await connectInstagramAction({
-            mode: "smart",
-            handle: handleVal,
-          });
-          if (res.ok) {
-            setIsIgConnected(true);
-            setHandle(handleVal.replace(/^@+/, ""));
-            setFeedback({ tone: "success", message: res.message });
-            setIsModalOpen(false);
-          } else {
-            setFeedback({ tone: "danger", message: res.message });
-          }
-        }}
-        isSmartConnecting={isConnecting}
-      />
     </div>
   );
 }

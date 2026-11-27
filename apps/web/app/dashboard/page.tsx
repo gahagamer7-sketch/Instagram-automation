@@ -216,14 +216,9 @@ async function SetupChecklist() {
       href: "/settings",
     },
     {
-      label: "Avtomatik rejim yoqilgan",
-      done: snapshot.autoMode,
-      href: "/settings",
-    },
-    {
-      label: "Tizim to'xtatilmagan",
-      done: !snapshot.paused,
-      href: "/pipeline",
+      label: "Video Studio tayyor",
+      done: snapshot.connectedProviders.includes("gemini"),
+      href: "/reels/create",
     },
   ];
 
@@ -233,7 +228,7 @@ async function SetupChecklist() {
     <Card>
       <CardHeader
         title="Ishga tushirish ro'yxati"
-        description={`${completed}/${steps.length} qadam bajarilgan. Qolganlari Onboarding'da bajariladi.`}
+        description={`${completed}/${steps.length} qadam bajarilgan. Qolganlari Sozlamalar bo'limida bajariladi.`}
         action={
           <Badge tone={completed === steps.length ? "success" : "warning"}>
             <StatusDot tone={completed === steps.length ? "success" : "warning"} />
@@ -278,11 +273,11 @@ async function SetupChecklist() {
 
       <div className="mt-4 pt-3 border-t border-border flex justify-end">
         <Link
-          href="/onboarding"
+          href="/reels/create"
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
         >
-          <Rocket className="h-3.5 w-3.5" />
-          Onboarding ustasini ochish
+          <Clapperboard className="h-3.5 w-3.5" />
+          Video Studiyani ochish
           <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
@@ -338,14 +333,14 @@ async function QueueCard() {
   const { data } = result;
   const rows = [
     { label: "Ishlov berilmoqda", value: data.pendingVideos, tone: "primary" as const },
-    { label: "Joylashga tayyor", value: data.readyVideos, tone: "warning" as const },
-    { label: "Joylandi", value: data.publishedVideos, tone: "success" as const },
+    { label: "Yuklab olishga tayyor", value: data.readyVideos, tone: "warning" as const },
+    { label: "Yakunlangan", value: data.publishedVideos, tone: "success" as const },
     { label: "Xato", value: data.failedVideos, tone: "danger" as const },
   ];
 
   return (
     <Card>
-      <CardHeader title="Navbat holati" description="Video statuslari bo'yicha" />
+      <CardHeader title="Studiyadagi videolar" description="Video statuslari bo'yicha" />
       <ul className="mt-4 space-y-3">
         {rows.map((row) => (
           <li key={row.label} className="flex items-center justify-between gap-3 text-sm">
@@ -359,11 +354,11 @@ async function QueueCard() {
       </ul>
       <p className="mt-4 flex items-center gap-2 text-xs text-muted">
         <Rocket className="h-3.5 w-3.5" aria-hidden />
-        Kunlik limit: 1 Reels (Sozlamalarda o&apos;zgartiriladi)
+        9:16 Full HD (1080x1920) MP4 eksport
       </p>
       <p className="mt-2 flex items-center gap-2 text-xs text-muted">
         <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-        QA o&apos;tmasa video joylanmaydi
+        Groq / Gemini AI + tabiiy Gemini TTS ovoz
       </p>
     </Card>
   );

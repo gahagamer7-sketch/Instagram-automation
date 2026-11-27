@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const metadata: Metadata = {
   title: "Ro'yxatdan o'tish — AutoChannel",
-  description: "AutoChannel platformasida shaxsiy Instagram kanalingizni avtomatlashtiring.",
+  description: "AutoChannel AI Video Studio'da shaxsiy hisobingizni oching va professional qisqa videolar yarating.",
 };
 
 export default function RegisterPage() {

@@ -14,9 +14,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AutoChannel — Avtomatik Reels tizimi",
+  title: "AutoChannel — AI Video Studio",
   description:
-    "Instagram Reels uchun to'liq avtomatik kanal: nisha, brend, ssenariy, video, joylash va tahlil.",
+    "AI Video Studio: g'oya, nisha, brend, ssenariy, o'zbekcha ovoz (TTS), dinamik subtitr va 9:16 HD video montaji.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

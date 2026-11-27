@@ -315,7 +315,7 @@ export function CalendarView({
                       <div>
                         <h5 className="text-xs font-semibold text-primary uppercase tracking-wider mb-1 flex items-center gap-1.5">
                           <Share2 className="h-3.5 w-3.5" />
-                          Instagram Caption va Hashtaglar
+                          Video Tavsifi (Caption) va Hashtaglar
                         </h5>
                         <div className="p-3 rounded-xl bg-surface border border-border text-xs text-text whitespace-pre-wrap">
                           {video.caption}
