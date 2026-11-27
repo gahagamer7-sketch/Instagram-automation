@@ -206,7 +206,7 @@ export function VideoCreatorStudio({
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-xl font-extrabold tracking-tight text-text">
+                <h2 className="text-xl font-extrabold tracking-tight text-white">
                   Katta Video Studiya
                 </h2>
                 <Badge tone="primary" className="gap-1 py-0.5 px-2 text-[10px]">
@@ -214,7 +214,7 @@ export function VideoCreatorStudio({
                   Pro Workstation
                 </Badge>
               </div>
-              <p className="text-xs text-muted">
+              <p className="text-xs text-slate-400">
                 G&apos;oya va Rejissyor uslubi asosida 1080x1920 Full HD vertikal video ishlab chiqarish.
               </p>
             </div>
@@ -234,13 +234,13 @@ export function VideoCreatorStudio({
         {/* CHAP USTUN: KREATIV BOSHQARUV MARKAZI (lg:col-span-7) */}
         <div className="lg:col-span-7 space-y-6">
           {/* 1. G'oya & Trend Lab */}
-          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-4">
+          <div className="p-6 rounded-3xl border border-slate-800 bg-[#111b2e] shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-extrabold">
                   1
                 </span>
-                <h3 className="text-sm font-bold text-text">
+                <h3 className="text-base font-extrabold text-white">
                   Video G&apos;oyasi yoki Mavzusi
                 </h3>
               </div>
@@ -249,15 +249,15 @@ export function VideoCreatorStudio({
                 type="button"
                 onClick={() => handleSuggestIdeas()}
                 disabled={suggesting || loading}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary-strong transition disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-strong transition disabled:opacity-50"
               >
-                <Wand2 className={`h-3.5 w-3.5 ${suggesting ? "animate-spin" : ""}`} />
+                <Wand2 className={`h-4 w-4 ${suggesting ? "animate-spin" : ""}`} />
                 {suggesting ? "AI G'oyalar qidirilmoqda..." : "AI Trend G'oyalar"}
               </button>
             </div>
 
             {/* Nisha toifalari */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
+            <div className="flex flex-wrap gap-2 pt-1">
               {NISHE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
@@ -266,10 +266,10 @@ export function VideoCreatorStudio({
                     setSelectedCategory(cat.id);
                     handleSuggestIdeas(cat.query);
                   }}
-                  className={`rounded-xl px-2.5 py-1 text-[11px] font-medium transition ${
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
                     selectedCategory === cat.id
-                      ? "border border-primary bg-primary/10 text-primary font-semibold shadow-xs"
-                      : "border border-border bg-surface-2 text-muted hover:text-text hover:bg-surface"
+                      ? "border border-primary bg-primary text-white font-bold shadow-md shadow-primary/20"
+                      : "border border-slate-700/80 bg-slate-900/90 text-slate-300 hover:text-white hover:bg-slate-800"
                   }`}
                 >
                   {cat.label}
@@ -285,29 +285,29 @@ export function VideoCreatorStudio({
                 placeholder="Masalan: Har kuni ertalab 15 daqiqa kitob o'qish miyaga qanday ta'sir qiladi va uning 3 ta muhim siri..."
                 rows={3}
                 disabled={loading}
-                className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-text placeholder-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition resize-none leading-relaxed"
+                className="w-full rounded-2xl border border-slate-700/80 bg-slate-950/90 px-4 py-3.5 text-sm text-white placeholder-slate-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition resize-none leading-relaxed shadow-inner"
               />
-              <div className="absolute right-3 bottom-3 text-[10px] text-muted">
+              <div className="absolute right-3.5 bottom-3.5 text-xs text-slate-400 font-mono">
                 {topic.length} belgi
               </div>
             </div>
 
             {/* AI Taklif qilgan g'oyalar ro'yxati */}
             {suggestedIdeas.length > 0 && (
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[11px] font-semibold text-muted flex items-center gap-1">
-                  <Lightbulb className="h-3 w-3 text-warning" />
+              <div className="space-y-2 pt-1">
+                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                  <Lightbulb className="h-3.5 w-3.5 text-warning" />
                   Quyidagi trend g&apos;oyalardan birini tanlang:
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {suggestedIdeas.map((idea, idx) => (
                     <button
                       key={idx}
                       type="button"
                       onClick={() => setTopic(idea)}
-                      className="group flex items-start gap-2 rounded-xl border border-border bg-surface-2 p-2.5 text-left text-xs text-text hover:border-primary hover:bg-surface transition shadow-2xs"
+                      className="group flex items-start gap-2.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-3 text-left text-xs text-slate-200 hover:border-primary hover:bg-slate-800 transition shadow-sm cursor-pointer"
                     >
-                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition">
+                      <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/20 text-[10px] font-bold text-primary group-hover:bg-primary group-hover:text-white transition">
                         {idx + 1}
                       </span>
                       <span className="line-clamp-2 leading-snug">{idea}</span>
@@ -316,44 +316,44 @@ export function VideoCreatorStudio({
                 </div>
               </div>
             )}
-          </Card>
+          </div>
 
           {/* 2. Ssenariy Yozuvchi AI Dvigateli (Groq vs Gemini) */}
-          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
+          <div className="p-6 rounded-3xl border border-slate-800 bg-[#111b2e] shadow-2xl space-y-4">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-extrabold">
                 2
               </span>
-              <h3 className="text-sm font-bold text-text">
+              <h3 className="text-base font-extrabold text-white">
                 Ssenariy Dvigateli (AI Engine)
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {/* Groq Llama 3.3 */}
               <button
                 type="button"
                 onClick={() => setAiProvider("groq")}
-                className={`relative flex flex-col items-start p-3.5 rounded-2xl border text-left transition ${
+                className={`relative flex flex-col items-start p-4 rounded-2xl border text-left transition cursor-pointer ${
                   aiProvider === "groq"
-                    ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
-                    : "border-border bg-surface hover:bg-surface-2"
+                    ? "border-primary bg-primary/15 ring-2 ring-primary/40 shadow-lg text-white"
+                    : "border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80"
                 }`}
               >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-text">
-                    <Zap className="h-3.5 w-3.5 fill-current text-primary" />
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                    <Zap className="h-4 w-4 fill-current text-primary" />
                     Groq (Llama 3.3 70B)
                   </span>
-                  <Badge tone="success" className="text-[9px] py-0 px-1.5">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     ⚡ ~1.2s Ultra-Tez
-                  </Badge>
+                  </span>
                 </div>
-                <p className="text-[11px] text-muted leading-relaxed">
+                <p className="text-xs text-slate-400 leading-relaxed">
                   Viral hooklar va dinamik qisqa ssenariylar uchun tavsiya etiladi.
                 </p>
                 {aiProvider === "groq" && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary animate-ping" />
+                  <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-primary animate-ping" />
                 )}
               </button>
 
@@ -361,48 +361,48 @@ export function VideoCreatorStudio({
               <button
                 type="button"
                 onClick={() => setAiProvider("gemini")}
-                className={`relative flex flex-col items-start p-3.5 rounded-2xl border text-left transition ${
+                className={`relative flex flex-col items-start p-4 rounded-2xl border text-left transition cursor-pointer ${
                   aiProvider === "gemini"
-                    ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
-                    : "border-border bg-surface hover:bg-surface-2"
+                    ? "border-primary bg-primary/15 ring-2 ring-primary/40 shadow-lg text-white"
+                    : "border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80"
                 }`}
               >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-text">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-white">
+                    <Sparkles className="h-4 w-4 text-primary" />
                     Gemini 2.0 Flash
                   </span>
-                  <Badge tone="primary" className="text-[9px] py-0 px-1.5">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/20 text-primary border border-primary/30">
                     🧠 Chuqur Mantiq
-                  </Badge>
+                  </span>
                 </div>
-                <p className="text-[11px] text-muted leading-relaxed">
+                <p className="text-xs text-slate-400 leading-relaxed">
                   Boy faktlar, ta&apos;limiy va chuqur tahliliy videolar uchun a&apos;lo.
                 </p>
                 {aiProvider === "gemini" && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary animate-ping" />
+                  <span className="absolute top-2.5 right-2.5 flex h-2 w-2 rounded-full bg-primary animate-ping" />
                 )}
               </button>
             </div>
-          </Card>
+          </div>
 
           {/* 3. Ovoz Studiyasi (Voice Lab) */}
-          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
+          <div className="p-6 rounded-3xl border border-slate-800 bg-[#111b2e] shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-extrabold">
                   3
                 </span>
-                <h3 className="text-sm font-bold text-text">
+                <h3 className="text-base font-extrabold text-white">
                   Ovoz Studiyasi (Gemini TTS)
                 </h3>
               </div>
-              <span className="text-[11px] font-medium text-primary">
+              <span className="text-xs font-bold text-primary">
                 Tabiiy o&apos;zbekcha nutq
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               {VOICES.map((v) => {
                 const isSelected = voiceId === v.id;
                 return (
@@ -410,17 +410,17 @@ export function VideoCreatorStudio({
                     key={v.id}
                     type="button"
                     onClick={() => setVoiceId(v.id)}
-                    className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition ${
+                    className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition cursor-pointer ${
                       isSelected
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
-                        : "border-border bg-surface hover:bg-surface-2"
+                        ? "border-primary bg-primary/15 ring-2 ring-primary/40 shadow-lg text-white"
+                        : "border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/80"
                     }`}
                   >
                     <div
                       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${
                         isSelected
-                          ? "bg-primary text-white shadow-md neon-glow"
-                          : "bg-surface-2 text-muted border border-border"
+                          ? "bg-primary text-white shadow-md"
+                          : "bg-slate-800 text-slate-400 border border-slate-700"
                       }`}
                     >
                       {isSelected ? (
@@ -437,15 +437,15 @@ export function VideoCreatorStudio({
 
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-text">{v.name}</span>
-                        <span className="text-[10px] text-muted font-medium">
+                        <span className="text-sm font-bold text-white">{v.name}</span>
+                        <span className="text-[10px] text-slate-400 font-semibold px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700">
                           {v.gender}
                         </span>
                       </div>
-                      <p className="text-[11px] font-medium text-primary leading-tight mt-0.5">
+                      <p className="text-xs font-semibold text-primary leading-tight mt-1">
                         {v.tone}
                       </p>
-                      <p className="text-[10px] text-muted mt-1 leading-snug">
+                      <p className="text-[11px] text-slate-400 mt-1 leading-snug">
                         {v.desc}
                       </p>
                     </div>
@@ -453,16 +453,16 @@ export function VideoCreatorStudio({
                 );
               })}
             </div>
-          </Card>
+          </div>
 
           {/* 4. Rejissyor Uslubi & Maxsus Skill (Director Mode) */}
-          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
+          <div className="p-6 rounded-3xl border border-slate-800 bg-[#111b2e] shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-primary/20 text-primary border border-primary/30 text-xs font-extrabold">
                   4
                 </span>
-                <h3 className="text-sm font-bold text-text">
+                <h3 className="text-base font-extrabold text-white">
                   Rejissyor Uslubi (Director Mode)
                 </h3>
               </div>
@@ -470,23 +470,23 @@ export function VideoCreatorStudio({
               <button
                 type="button"
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted hover:text-text transition"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white transition cursor-pointer"
               >
                 <SlidersHorizontal className="h-3.5 w-3.5" />
                 {showAdvanced ? "Yashirish" : "Sozlash"}
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
               <div>
-                <label className="text-[11px] font-semibold text-muted block mb-1">
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
                   Hook (Birinchi 2 soniya) uslubi:
                 </label>
                 <select
                   value={hookStyle}
                   onChange={(e) => setHookStyle(e.target.value)}
                   disabled={loading}
-                  className="w-full rounded-xl border border-border bg-surface px-3 py-2 text-xs font-medium text-text focus:border-primary focus:outline-none"
+                  className="w-full rounded-xl border border-slate-700/80 bg-slate-950 px-3.5 py-2.5 text-xs font-medium text-white focus:border-primary focus:outline-none"
                 >
                   <option value="Savol & Qiziqish">❓ Savol & Qiziqish (Miyani uyg&apos;otuvchi)</option>
                   <option value="Kutilmagan Shok Fakt">⚡ Kutilmagan Shok Fakt</option>
@@ -496,20 +496,20 @@ export function VideoCreatorStudio({
               </div>
 
               <div>
-                <label className="text-[11px] font-semibold text-muted block mb-1">
+                <label className="text-xs font-semibold text-slate-300 block mb-1.5">
                   Format & O&apos;lcham:
                 </label>
-                <div className="rounded-xl border border-border bg-surface-2 px-3 py-2 text-xs font-medium text-text flex items-center justify-between">
+                <div className="rounded-xl border border-slate-700/80 bg-slate-950 px-3.5 py-2.5 text-xs font-medium text-white flex items-center justify-between">
                   <span>9:16 Vertikal (Full HD)</span>
-                  <span className="font-mono text-[10px] text-primary">1080×1920</span>
+                  <span className="font-mono text-xs text-primary font-bold">1080×1920</span>
                 </div>
               </div>
             </div>
 
             {/* Kengaytirilgan Skill Matni */}
             {showAdvanced && (
-              <div className="pt-2 space-y-1.5 border-t border-border mt-3">
-                <span className="text-[11px] text-muted block font-medium">
+              <div className="pt-3 space-y-2 border-t border-slate-800 mt-2">
+                <span className="text-xs text-slate-300 block font-medium">
                   Maxsus Mahorat (Skill) qoidasi:
                 </span>
                 <textarea
@@ -518,11 +518,11 @@ export function VideoCreatorStudio({
                   placeholder="Masalan: Gaplar qisqa va tezkor bo'lsin. Murakkab so'zlar ishlatilmasin..."
                   rows={3}
                   disabled={loading}
-                  className="w-full rounded-xl border border-border bg-surface-2 p-3 text-xs text-text placeholder-muted focus:border-primary focus:outline-none font-mono"
+                  className="w-full rounded-2xl border border-slate-700/80 bg-slate-950 p-3.5 text-xs text-white placeholder-slate-400 focus:border-primary focus:outline-none font-mono"
                 />
               </div>
             )}
-          </Card>
+          </div>
 
           {/* Xatolik xabari */}
           {error && (
@@ -743,7 +743,7 @@ export function VideoCreatorStudio({
                   <a
                     href={result.coverUrl}
                     download="cover.jpg"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-surface-2 transition"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                   >
                     <Download className="h-3.5 w-3.5" />
                     Muqova (JPG)
@@ -753,7 +753,7 @@ export function VideoCreatorStudio({
                 <button
                   type="button"
                   onClick={copyCaption}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text hover:bg-surface-2 transition"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition cursor-pointer"
                 >
                   {copiedCaption ? (
                     <>
@@ -771,18 +771,18 @@ export function VideoCreatorStudio({
 
               {/* Sarlavha va Caption oynasi */}
               {result.caption && (
-                <div className="rounded-2xl border border-border/80 glass-panel p-4 text-xs space-y-2">
+                <div className="rounded-2xl border border-slate-800 bg-[#111b2e] p-4 text-xs space-y-2 shadow-lg">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-text">{result.title}</span>
-                    <span className="text-[10px] text-muted">
+                    <span className="font-bold text-white text-sm">{result.title}</span>
+                    <span className="text-[10px] text-slate-400 font-mono">
                       ⏱️ {result.durationSec} soniya
                     </span>
                   </div>
-                  <p className="text-muted text-[11px] whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
+                  <p className="text-slate-300 text-xs whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto">
                     {result.caption}
                   </p>
                   {result.hashtags && result.hashtags.length > 0 && (
-                    <p className="text-primary font-medium text-[11px]">
+                    <p className="text-primary font-semibold text-xs pt-1">
                       {result.hashtags.join(" ")}
                     </p>
                   )}
