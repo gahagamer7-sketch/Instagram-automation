@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { PageHeader } from "@/components/ui/card";
 import { CardSkeleton } from "@/components/ui/skeleton";
 import { VideoCreatorStudio } from "@/components/reels/video-creator-studio";
 import { getActiveSkill, getSkillText } from "@/lib/skills";
@@ -12,16 +11,9 @@ export const metadata = {
 
 export default function CreateVideoPage() {
   return (
-    <>
-      <PageHeader
-        title="Video Yaratish Studiyasi"
-        description="G'oya va Skill asosida bir zumda 1080x1920 vertikal video (Reels, TikTok, Shorts) yarating."
-      />
-
-      <Suspense fallback={<CardSkeleton lines={8} />}>
-        <StudioContent />
-      </Suspense>
-    </>
+    <Suspense fallback={<CardSkeleton lines={10} />}>
+      <StudioContent />
+    </Suspense>
   );
 }
 
