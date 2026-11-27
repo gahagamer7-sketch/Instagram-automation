@@ -5,15 +5,16 @@ import { prisma } from "@autochannel/db";
 import { ReelsGrid, type ReelCardItem } from "@/components/reels/reels-grid";
 
 export const metadata = {
-  title: "Reels kutubxonasi — AutoChannel",
+  title: "Mening Videolarim — AutoChannel",
+  description: "Barcha yaratilgan 1080x1920 Full HD videolar kutubxonasi.",
 };
 
 export default function ReelsPage() {
   return (
     <>
       <PageHeader
-        title="Reels kutubxonasi"
-        description="Barcha tayyorlangan Reels videolari: 9:16 maket, caption, ssenariylar va QA tahlili (TZ 4.12)."
+        title="Mening Videolarim"
+        description="Barcha yaratilgan 1080x1920 Full HD videolar: 9:16 pleyer, MP4 yuklab olish, ssenariylar va ijtimoiy tarmoqlar uchun post matnlari."
       />
 
       <Suspense fallback={<CardSkeleton lines={6} />}>
