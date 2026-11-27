@@ -234,7 +234,7 @@ export function VideoCreatorStudio({
         {/* CHAP USTUN: KREATIV BOSHQARUV MARKAZI (lg:col-span-7) */}
         <div className="lg:col-span-7 space-y-6">
           {/* 1. G'oya & Trend Lab */}
-          <Card className="p-5 border-border shadow-sm space-y-4">
+          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -319,7 +319,7 @@ export function VideoCreatorStudio({
           </Card>
 
           {/* 2. Ssenariy Yozuvchi AI Dvigateli (Groq vs Gemini) */}
-          <Card className="p-5 border-border shadow-sm space-y-3">
+          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
             <div className="flex items-center gap-2">
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
                 2
@@ -336,7 +336,7 @@ export function VideoCreatorStudio({
                 onClick={() => setAiProvider("groq")}
                 className={`relative flex flex-col items-start p-3.5 rounded-2xl border text-left transition ${
                   aiProvider === "groq"
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
+                    ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
                     : "border-border bg-surface hover:bg-surface-2"
                 }`}
               >
@@ -353,7 +353,7 @@ export function VideoCreatorStudio({
                   Viral hooklar va dinamik qisqa ssenariylar uchun tavsiya etiladi.
                 </p>
                 {aiProvider === "groq" && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary" />
+                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary animate-ping" />
                 )}
               </button>
 
@@ -363,7 +363,7 @@ export function VideoCreatorStudio({
                 onClick={() => setAiProvider("gemini")}
                 className={`relative flex flex-col items-start p-3.5 rounded-2xl border text-left transition ${
                   aiProvider === "gemini"
-                    ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
+                    ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
                     : "border-border bg-surface hover:bg-surface-2"
                 }`}
               >
@@ -380,14 +380,14 @@ export function VideoCreatorStudio({
                   Boy faktlar, ta&apos;limiy va chuqur tahliliy videolar uchun a&apos;lo.
                 </p>
                 {aiProvider === "gemini" && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary" />
+                  <span className="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-primary animate-ping" />
                 )}
               </button>
             </div>
           </Card>
 
           {/* 3. Ovoz Studiyasi (Voice Lab) */}
-          <Card className="p-5 border-border shadow-sm space-y-3">
+          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -412,18 +412,27 @@ export function VideoCreatorStudio({
                     onClick={() => setVoiceId(v.id)}
                     className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition ${
                       isSelected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary/20 shadow-sm"
+                        ? "border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md neon-border"
                         : "border-border bg-surface hover:bg-surface-2"
                     }`}
                   >
                     <div
-                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${
                         isSelected
-                          ? "bg-primary text-white shadow-sm"
+                          ? "bg-primary text-white shadow-md neon-glow"
                           : "bg-surface-2 text-muted border border-border"
                       }`}
                     >
-                      <Volume2 className="h-4 w-4" />
+                      {isSelected ? (
+                        <div className="flex items-end gap-0.5 h-4 px-0.5" title="Audio to'lqin">
+                          <span className="w-1 bg-white rounded-full eq-bar-1" />
+                          <span className="w-1 bg-white rounded-full eq-bar-2" />
+                          <span className="w-1 bg-white rounded-full eq-bar-3" />
+                          <span className="w-1 bg-white rounded-full eq-bar-4" />
+                        </div>
+                      ) : (
+                        <Volume2 className="h-4 w-4" />
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -447,7 +456,7 @@ export function VideoCreatorStudio({
           </Card>
 
           {/* 4. Rejissyor Uslubi & Maxsus Skill (Director Mode) */}
-          <Card className="p-5 border-border shadow-sm space-y-3">
+          <Card className="p-5 border-border/80 glass-panel shadow-sm space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary/10 text-primary text-xs font-bold">
@@ -528,7 +537,7 @@ export function VideoCreatorStudio({
             type="button"
             onClick={() => handleGenerate()}
             disabled={loading || !topic.trim()}
-            className="w-full h-14 text-base font-extrabold gap-3 shadow-xl rounded-2xl gradient-brand text-white hover:opacity-95 transition disabled:opacity-50"
+            className="w-full h-14 text-base font-extrabold gap-3 shadow-xl rounded-2xl gradient-brand text-white hover:opacity-95 transition disabled:opacity-50 neon-glow cursor-pointer"
           >
             {loading ? (
               <>
@@ -560,7 +569,7 @@ export function VideoCreatorStudio({
           </div>
 
           {/* Haqiqiy Smartfon Mockup Romi */}
-          <div className="mx-auto w-full max-w-[340px] rounded-[3rem] p-3.5 bg-gradient-to-b from-slate-800 to-slate-950 border-4 border-slate-700/80 shadow-2xl ring-1 ring-white/10">
+          <div className="mx-auto w-full max-w-[340px] rounded-[3rem] p-3.5 bg-gradient-to-b from-slate-800 to-slate-950 border-4 border-slate-700/80 shadow-2xl ring-1 ring-white/10 neon-glow">
             {/* Smartfon Dynamic Island / Dinamik karnay */}
             <div className="mx-auto mb-3 h-4 w-28 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center">
               <div className="h-2 w-2 rounded-full bg-slate-800 mr-2" />
@@ -686,7 +695,7 @@ export function VideoCreatorStudio({
 
               {/* 3. Kutish (Standby) holati */}
               {!result && !loading && (
-                <div className="flex h-full flex-col justify-between py-6 px-2 text-center text-muted">
+                <div className="flex h-full flex-col justify-between py-6 px-2 text-center text-muted studio-grid-bg">
                   <div className="flex items-center justify-between text-[10px] text-muted/80">
                     <span>9:16 VERTICAL</span>
                     <span>1080 × 1920</span>
@@ -723,7 +732,7 @@ export function VideoCreatorStudio({
               <a
                 href={result.videoUrl}
                 download={`${result.title || "reels"}.mp4`}
-                className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg hover:bg-primary-strong transition"
+                className="w-full h-12 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg hover:bg-primary-strong transition neon-glow"
               >
                 <Download className="h-4 w-4" />
                 Videoni Yuklab Olish (MP4 1080p)
@@ -762,7 +771,7 @@ export function VideoCreatorStudio({
 
               {/* Sarlavha va Caption oynasi */}
               {result.caption && (
-                <div className="rounded-2xl border border-border bg-surface p-4 text-xs space-y-2">
+                <div className="rounded-2xl border border-border/80 glass-panel p-4 text-xs space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-text">{result.title}</span>
                     <span className="text-[10px] text-muted">
