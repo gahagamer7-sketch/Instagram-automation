@@ -4,20 +4,25 @@ import { Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SystemStatus } from "./system-status";
 import { UserBadge } from "./user-profile";
+import { HamburgerButton } from "./hamburger-button";
 
 export function Topbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 lg:hidden">
-          <span className="gradient-brand flex h-8 w-8 items-center justify-center rounded-lg text-white">
-            <Sparkles className="h-4 w-4" aria-hidden />
-          </span>
-          <span className="text-sm font-semibold">AutoChannel</span>
-        </Link>
+      <div className="mx-auto flex h-16 w-full max-w-[1700px] items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-3">
+          <HamburgerButton />
 
-        <p className="hidden text-sm text-muted lg:block">
-          Avtomatik Reels kanali — boshqaruv paneli
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <span className="gradient-brand flex h-8 w-8 items-center justify-center rounded-xl text-white shadow-sm">
+              <Sparkles className="h-4 w-4" aria-hidden />
+            </span>
+            <span className="text-sm font-bold tracking-tight">AutoChannel</span>
+          </Link>
+        </div>
+
+        <p className="hidden text-xs font-medium text-muted xl:block">
+          🎬 AI Video Generator Studio — To&apos;liq avtomatlashgan 1080x1920 video ishlab chiqarish
         </p>
 
         <div className="flex items-center gap-3">
