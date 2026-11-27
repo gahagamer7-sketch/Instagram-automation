@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listCredentials, saveCredential } from "@/lib/credentials";
+import { providerMeta } from "@/lib/providers";
 import { getCurrentUser } from "@/lib/session";
 
 export async function GET() {
@@ -11,7 +12,9 @@ export async function GET() {
         { status: 401 },
       );
     }
-    return NextResponse.json({ credentials: await listCredentials() });
+    return NextResponse.json({
+      credentials: await listCredentials(session.user.id),
+    });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Xato" },
@@ -29,12 +32,6 @@ export async function POST(request: Request) {
         { status: 401 },
       );
     }
-    if (session.user.role !== "admin") {
-      return NextResponse.json(
-        { error: "Faqat administratorlar tizim API kalitlarini o'zgartirishi mumkin" },
-        { status: 403 },
-      );
-    }
     const body = (await request.json()) as {
       provider?: string;
       apiKey?: string;
@@ -47,10 +44,21 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    const cred = await saveCredential(body.provider, body.apiKey, {
-      daily: body.dailyLimit,
-      monthly: body.monthlyLimit,
-    });
+    if (!providerMeta(body.provider)) {
+      return NextResponse.json(
+        { error: "Noma'lum provayder" },
+        { status: 400 },
+      );
+    }
+    const cred = await saveCredential(
+      session.user.id,
+      body.provider,
+      body.apiKey,
+      {
+        daily: body.dailyLimit,
+        monthly: body.monthlyLimit,
+      },
+    );
     return NextResponse.json({ credential: cred }, { status: 201 });
   } catch (err) {
     return NextResponse.json(

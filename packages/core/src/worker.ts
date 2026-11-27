@@ -21,17 +21,19 @@ function getEncryptionKey(): string {
   return key;
 }
 
-async function getDecryptedGeminiProvider(): Promise<AiProvider> {
+async function getDecryptedGeminiProvider(userId?: string | null): Promise<AiProvider> {
   const encKey = getEncryptionKey();
-  const cred = await prisma.apiCredential.findUnique({
-    where: { provider: "gemini" },
-  });
+  const cred = userId
+    ? await prisma.apiCredential.findUnique({
+        where: { userId_provider: { userId, provider: "gemini" } },
+      })
+    : null;
 
   if (!cred) {
-    // Agar DB'da kalit bo'lmasa, muhit o'zgaruvchisidan tekshiramiz
+    // Agar foydalanuvchi kaliti topilmasa, tizim cron muhit o'zgaruvchisidan tekshiramiz
     const envKey = process.env.GEMINI_API_KEY;
     if (envKey) return createProvider("gemini", envKey);
-    throw new Error("Gemini API kaliti topilmadi (DB yoki GEMINI_API_KEY).");
+    throw new Error("Gemini API kaliti topilmadi (foydalanuvchi kaliti yoki GEMINI_API_KEY).");
   }
 
   const rawKey = decrypt(cred.encryptedKey, encKey);
@@ -82,8 +84,6 @@ async function main() {
   const outputDir = join(process.cwd(), "tmp", "render", job.id);
 
   try {
-    const aiProvider = await getDecryptedGeminiProvider();
-
     // 3. Ishlanadigan Video'ni aniqlash
     let video;
     if (job.videoId) {
@@ -104,6 +104,8 @@ async function main() {
     if (!video) {
       throw new Error("Ishlab chiqarish uchun rejalashtirilgan video topilmadi.");
     }
+
+    const aiProvider = await getDecryptedGeminiProvider(video.channel.userId);
 
     console.log(`[worker] Video aniqlandi: "${video.idea?.topic ?? video.id}" (status: ${video.status})`);
 
@@ -179,9 +181,11 @@ async function main() {
     let backgroundMedia: { type: "video" | "image"; path: string } | undefined;
 
     try {
-      const pexelsCred = await prisma.apiCredential.findUnique({
-        where: { provider: "pexels" },
-      });
+      const pexelsCred = channel.userId
+        ? await prisma.apiCredential.findUnique({
+            where: { userId_provider: { userId: channel.userId, provider: "pexels" } },
+          })
+        : null;
       const pexelsKey = pexelsCred
         ? decrypt(pexelsCred.encryptedKey, getEncryptionKey())
         : process.env.PEXELS_API_KEY;

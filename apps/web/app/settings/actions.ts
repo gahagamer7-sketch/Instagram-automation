@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { saveCredential, testCredential } from "@/lib/credentials";
 import { providerMeta } from "@/lib/providers";
+import { getCurrentUser } from "@/lib/session";
 
 export interface ActionResult {
   ok: boolean;
@@ -43,7 +44,11 @@ export async function saveKeyAction(
   }
 
   try {
-    const saved = await saveCredential(provider, apiKey, {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { ok: false, message: "Avtorizatsiyadan o'tilmagan. Iltimos tizimga kiring." };
+    }
+    const saved = await saveCredential(currentUser.user.id, provider, apiKey, {
       daily: parseLimit(formData.get("dailyLimit")),
       monthly: parseLimit(formData.get("monthlyLimit")),
     });
@@ -66,7 +71,11 @@ export async function testKeyAction(
   if (!id) return { ok: false, message: "Kalit topilmadi." };
 
   try {
-    const result = await testCredential(id);
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { ok: false, message: "Avtorizatsiyadan o'tilmagan." };
+    }
+    const result = await testCredential(id, currentUser.user.id);
     refresh();
     return { ok: result.ok, message: result.message };
   } catch (err) {

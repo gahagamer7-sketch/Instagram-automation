@@ -3,6 +3,7 @@
 import { prisma } from "@autochannel/db";
 import { refresh } from "next/cache";
 import { getAiProvider } from "@/lib/credentials";
+import { getCurrentUser } from "@/lib/session";
 import { activateSkillVersion, createSkillVersion, SKILL_NAME } from "@/lib/skills";
 import { validateSkillText } from "@/lib/skill-text";
 
@@ -76,7 +77,8 @@ export async function testSkillAction(
   const validation = validateSkillText(text);
   if (!validation.ok) return { ok: false, message: validation.message };
 
-  const lookup = await getAiProvider();
+  const currentUser = await getCurrentUser();
+  const lookup = await getAiProvider("gemini", currentUser?.user?.id);
   if (!lookup.ok) return { ok: false, message: lookup.message };
 
   const prompt = [

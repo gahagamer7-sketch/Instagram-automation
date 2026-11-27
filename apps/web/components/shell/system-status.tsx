@@ -3,13 +3,15 @@ import { toggleSystem } from "@/app/actions/system";
 import { Badge, StatusDot } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getSystemSnapshot } from "@/lib/system";
+import { getCurrentUser } from "@/lib/session";
 
 /**
  * Tizim holati + "To'xtatish" tugmasi (TZ 4.5, 4.12).
  * Baza javob bermasa ham panel yiqilmaydi — holat "ulanmagan" bo'lib qoladi.
  */
 export async function SystemStatus() {
-  const snapshot = await getSystemSnapshot();
+  const currentUser = await getCurrentUser();
+  const snapshot = await getSystemSnapshot(currentUser?.user?.id);
 
   if (!snapshot.ok) {
     return (

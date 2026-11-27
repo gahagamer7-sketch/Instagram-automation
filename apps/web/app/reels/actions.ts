@@ -2,10 +2,9 @@
 
 import { prisma, IdeaStatus } from "@autochannel/db";
 import { getCurrentUser } from "@/lib/session";
-import { getAiProvider, getGeminiTtsProvider } from "@/lib/credentials";
+import { getAiProvider, getGeminiTtsProvider, getUserProviderKey } from "@/lib/credentials";
 import { getActiveSkill, getSkillText } from "@/lib/skills";
 import { createVideoFromIdea } from "@autochannel/core";
-import { decrypt } from "@autochannel/crypto";
 import { revalidatePath } from "next/cache";
 
 export interface CreateVideoInput {
@@ -48,13 +47,13 @@ export async function createVideoAction(
     const aiChoice = input.aiProvider ?? "groq";
 
     // 1. Ssenariy yozuvchi AI provayderi (Groq yoki Gemini)
-    const textLookup = await getAiProvider(aiChoice);
+    const textLookup = await getAiProvider(aiChoice, currentUser.user.id);
     if (!textLookup.ok) {
       return { ok: false, message: textLookup.message };
     }
 
-    // 2. Ovoz (TTS) sintezi uchun har doim Gemini provayderi
-    const ttsLookup = await getGeminiTtsProvider();
+    // 2. Ovoz (TTS) sintezi uchun har doim foydalanuvchining shaxsiy Gemini provayderi
+    const ttsLookup = await getGeminiTtsProvider(currentUser.user.id);
     if (!ttsLookup.ok) {
       return { ok: false, message: ttsLookup.message };
     }
@@ -68,14 +67,8 @@ export async function createVideoAction(
       }
     }
 
-    // 4. Pexels API kaliti (agar kiritilgan bo'lsa)
-    let pexelsApiKey = process.env.PEXELS_API_KEY;
-    const pexelsCred = await prisma.apiCredential.findUnique({
-      where: { provider: "pexels" },
-    });
-    if (pexelsCred && process.env.ENCRYPTION_KEY) {
-      pexelsApiKey = decrypt(pexelsCred.encryptedKey, process.env.ENCRYPTION_KEY);
-    }
+    // 4. Foydalanuvchining shaxsiy Pexels API kaliti (agar kiritilgan bo'lsa)
+    const pexelsApiKey = (await getUserProviderKey(currentUser.user.id, "pexels")) ?? undefined;
 
     // 5. Foydalanuvchi kanali
     let channel = currentUser.channel;
@@ -166,7 +159,11 @@ export async function suggestIdeasAction(
   aiProvider: "groq" | "gemini" = "groq",
 ): Promise<{ ok: boolean; ideas: string[]; error?: string }> {
   try {
-    const aiLookup = await getAiProvider(aiProvider);
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { ok: false, ideas: [], error: "Avtorizatsiyadan o'tilmagan." };
+    }
+    const aiLookup = await getAiProvider(aiProvider, currentUser.user.id);
     if (!aiLookup.ok) {
       return { ok: false, ideas: [], error: aiLookup.message };
     }

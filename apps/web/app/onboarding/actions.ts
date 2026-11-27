@@ -103,8 +103,9 @@ export async function connectInstagramAction(
 
         // Meta kredensialini faollashtiramiz
         await tx.apiCredential.upsert({
-          where: { provider: "meta" },
+          where: { userId_provider: { userId: session.userId, provider: "meta" } },
           create: {
+            userId: session.userId,
             provider: "meta",
             encryptedKey: encryptedToken,
             last4: cleanHandle.slice(-4),
@@ -207,8 +208,9 @@ export async function connectInstagramAction(
       });
 
       await tx.apiCredential.upsert({
-        where: { provider: "meta" },
+        where: { userId_provider: { userId: session.userId, provider: "meta" } },
         create: {
+          userId: session.userId,
           provider: "meta",
           encryptedKey: encryptedToken,
           last4: cleanToken.slice(-4),
@@ -333,8 +335,9 @@ export async function connectInstagramDirectAction(
       });
 
       await tx.apiCredential.upsert({
-        where: { provider: "instagram_direct" },
+        where: { userId_provider: { userId: session.userId, provider: "instagram_direct" } },
         create: {
+          userId: session.userId,
           provider: "instagram_direct",
           encryptedKey: encryptedCredentials,
           last4: cleanUsername.slice(-4),
@@ -352,8 +355,9 @@ export async function connectInstagramDirectAction(
 
       // Tizim 'meta' statusini ham connected qilamiz
       await tx.apiCredential.upsert({
-        where: { provider: "meta" },
+        where: { userId_provider: { userId: session.userId, provider: "meta" } },
         create: {
+          userId: session.userId,
           provider: "meta",
           encryptedKey: encryptedToken,
           last4: cleanUsername.slice(-4),
@@ -453,7 +457,10 @@ export async function disconnectInstagramAction(
 
       if (remainingActive === 0) {
         await tx.apiCredential.updateMany({
-          where: { provider: { in: ["meta", "instagram_direct"] } },
+          where: {
+            userId: session.userId,
+            provider: { in: ["meta", "instagram_direct"] },
+          },
           data: { status: "unverified" },
         });
       }

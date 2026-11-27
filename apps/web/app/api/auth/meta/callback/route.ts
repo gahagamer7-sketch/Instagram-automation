@@ -227,23 +227,27 @@ export async function GET(request: NextRequest) {
         },
       });
 
-      await tx.apiCredential.upsert({
-        where: { provider: "meta" },
-        create: {
-          provider: "meta",
-          encryptedKey: encryptedToken,
-          last4: longLived.accessToken.slice(-4),
-          status: "connected",
-          lastCheckedAt: new Date(),
-        },
-        update: {
-          encryptedKey: encryptedToken,
-          last4: longLived.accessToken.slice(-4),
-          status: "connected",
-          lastCheckedAt: new Date(),
-          lastError: null,
-        },
-      });
+      const ownerId = session?.userId ?? channel.userId;
+      if (ownerId) {
+        await tx.apiCredential.upsert({
+          where: { userId_provider: { userId: ownerId, provider: "meta" } },
+          create: {
+            userId: ownerId,
+            provider: "meta",
+            encryptedKey: encryptedToken,
+            last4: longLived.accessToken.slice(-4),
+            status: "connected",
+            lastCheckedAt: new Date(),
+          },
+          update: {
+            encryptedKey: encryptedToken,
+            last4: longLived.accessToken.slice(-4),
+            status: "connected",
+            lastCheckedAt: new Date(),
+            lastError: null,
+          },
+        });
+      }
 
       await tx.auditLog.create({
         data: {

@@ -7,6 +7,7 @@ import { SettingsNav } from "@/components/settings/settings-nav";
 import { ProviderCard } from "@/components/settings/provider-card";
 import { listCredentials, type CredentialView } from "@/lib/credentials";
 import { PROVIDERS } from "@/lib/providers";
+import { getCurrentUser } from "@/lib/session";
 
 export const metadata = {
   title: "Sozlamalar — AutoChannel",
@@ -50,7 +51,10 @@ async function ProvidersSection() {
   let dbError: string | null = null;
 
   try {
-    credentials = await listCredentials();
+    const currentUser = await getCurrentUser();
+    if (currentUser?.user?.id) {
+      credentials = await listCredentials(currentUser.user.id);
+    }
   } catch (err) {
     dbError = err instanceof Error ? err.message : String(err);
   }

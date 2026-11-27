@@ -8,7 +8,10 @@ async function trySendTelegram(
 ) {
   try {
     const encKey = process.env.ENCRYPTION_KEY;
-    const cred = await prisma.apiCredential.findUnique({ where: { provider: "telegram" } });
+    const cred = await prisma.apiCredential.findFirst({
+      where: { provider: "telegram", status: "connected" },
+      orderBy: { updatedAt: "desc" },
+    });
     const chatId = process.env.TELEGRAM_CHAT_ID;
     if (!chatId) return;
 

@@ -16,7 +16,7 @@ export async function POST(
   }
   const { id } = await params;
   try {
-    return NextResponse.json(await testCredential(id));
+    return NextResponse.json(await testCredential(id, session.user.id));
   } catch (err) {
     return NextResponse.json(
       { ok: false, message: err instanceof Error ? err.message : "Xato" },

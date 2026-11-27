@@ -3,6 +3,7 @@
 import { prisma } from "@autochannel/db";
 import { refresh } from "next/cache";
 import { getAiProvider } from "@/lib/credentials";
+import { getCurrentUser } from "@/lib/session";
 import { getActiveSkillText } from "@/lib/skills";
 import {
   generateContentCalendarIdeas,
@@ -21,7 +22,10 @@ export async function generateCalendarIdeasAction(
   count = 15,
 ): Promise<{ ok: boolean; message: string }> {
   try {
-    const channel = await prisma.channel.findFirst();
+    const currentUser = await getCurrentUser();
+    const channel = currentUser?.user?.id
+      ? await prisma.channel.findFirst({ where: { userId: currentUser.user.id } })
+      : await prisma.channel.findFirst();
     if (!channel) {
       return {
         ok: false,
@@ -35,7 +39,7 @@ export async function generateCalendarIdeasAction(
     const settings = await prisma.appSetting.findFirst();
     const publishHour = settings?.publishHours?.[0] ?? 19; // 19:00 (UTC+5)
 
-    const providerLookup = await getAiProvider();
+    const providerLookup = await getAiProvider("gemini", currentUser?.user?.id);
     let ideas;
     if (providerLookup.ok) {
       ideas = await generateContentCalendarIdeas(
@@ -113,11 +117,15 @@ export async function generateScriptForVideoAction(
       return { ok: false, message: "Video yoki mavzu topilmadi." };
     }
 
+    const currentUser = await getCurrentUser();
     const topic = video.idea.topic;
     const niche = video.channel.niche || "Foydali Ma'lumotlar";
     const skillText = await getActiveSkillText();
 
-    const providerLookup = await getAiProvider();
+    const providerLookup = await getAiProvider(
+      "gemini",
+      currentUser?.user?.id ?? video.channel.userId ?? undefined,
+    );
     if (!providerLookup.ok) {
       return {
         ok: false,

@@ -307,8 +307,9 @@ export async function GET(request: NextRequest) {
       });
 
       await tx.apiCredential.upsert({
-        where: { provider: "meta" },
+        where: { userId_provider: { userId: session.userId, provider: "meta" } },
         create: {
+          userId: session.userId,
           provider: "meta",
           encryptedKey: encryptedToken,
           last4: selectedAccount.username.slice(-4),

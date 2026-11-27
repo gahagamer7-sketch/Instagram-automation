@@ -7,6 +7,15 @@ import {
   verifySessionToken,
 } from "./auth";
 import { loadDashboardData } from "./dashboard";
+import {
+  getAiProvider,
+  getGeminiTtsProvider,
+  getUserProviderKey,
+  listCredentials,
+  saveCredential,
+  testCredential,
+} from "./credentials";
+import { getSystemSnapshot } from "./system";
 
 describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
   it(
@@ -177,5 +186,92 @@ describe("Ko'p foydalanuvchili arxitektura va Dashboard izolyatsiyasi", () => {
     await prisma.channel.delete({ where: { id: channel.id } });
     await prisma.user.delete({ where: { id: user.id } });
   }, 30_000);
+
+  it(
+    "har bir foydalanuvchining API kalitlari qat'iy shaxsiy saqlanadi va boshqa foydalanuvchiga o'tib ketmaydi",
+    async () => {
+      process.env.ENCRYPTION_KEY ||= "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+
+      const prevEnvGemini = process.env.GEMINI_API_KEY;
+      const prevEnvGroq = process.env.GROQ_API_KEY;
+      process.env.GEMINI_API_KEY = "AIzaGlobalEnvShouldNotLeakToUsers";
+      process.env.GROQ_API_KEY = "gsk_GlobalEnvShouldNotLeakToUsers";
+
+      const ts = Date.now();
+      const userA = await prisma.user.create({
+        data: {
+          name: "Key Owner A",
+          email: `owner_a_${ts}@test.uz`,
+          passwordHash: "hash",
+        },
+      });
+      const userB = await prisma.user.create({
+        data: {
+          name: "New User B",
+          email: `new_b_${ts}@test.uz`,
+          passwordHash: "hash",
+        },
+      });
+
+      try {
+        // User A o'zining shaxsiy kalitlarini saqlaydi
+        const credAGemini = await saveCredential(userA.id, "gemini", "AIzaUserA_Gemini_1111");
+        await saveCredential(userA.id, "groq", "gsk_UserA_Groq_2222");
+        await saveCredential(userA.id, "pexels", "pexels_UserA_Key_3333");
+        await prisma.apiCredential.update({
+          where: { id: credAGemini.id },
+          data: { status: "connected" },
+        });
+
+        // User B yangi foydalanuvchi: unda hech qanday kalit ko'rinmasligi shart
+        const listA = await listCredentials(userA.id);
+        const listB = await listCredentials(userB.id);
+        expect(listA.map((c) => c.provider).sort()).toEqual(["gemini", "groq", "pexels"]);
+        expect(listB).toEqual([]);
+
+        // User B ning AI / TTS / Pexels chaqiruvlari User A yoki global env kalitini olmasligi shart
+        const aiB = await getAiProvider("groq", userB.id);
+        const ttsB = await getGeminiTtsProvider(userB.id);
+        const pexelsB = await getUserProviderKey(userB.id, "pexels");
+        expect(aiB.ok).toBe(false);
+        expect(ttsB.ok).toBe(false);
+        expect(pexelsB).toBeNull();
+
+        // User B begona (User A) kalitini test qila olmasligi shart (IDOR himoyasi)
+        const idorAttempt = await testCredential(credAGemini.id, userB.id);
+        expect(idorAttempt.ok).toBe(false);
+
+        // System snapshot ham User A ning ulangan kalitini User B ga ko'rsatmasligi shart
+        const snapA = await getSystemSnapshot(userA.id);
+        const snapB = await getSystemSnapshot(userB.id);
+        expect(snapA.ok).toBe(true);
+        expect(snapB.ok).toBe(true);
+        if (snapA.ok && snapB.ok) {
+          expect(snapA.connectedProviders).toContain("gemini");
+          expect(snapB.connectedProviders).toEqual([]);
+        }
+
+        // User B o'zining shaxsiy kalitini kiritadi — ikkalasi ham mustaqil ishlaydi
+        const credBGemini = await saveCredential(userB.id, "gemini", "AIzaUserB_Gemini_9999");
+        expect(credBGemini.last4).toBe("9999");
+        expect((await listCredentials(userA.id)).find((c) => c.provider === "gemini")?.last4).toBe("1111");
+        expect((await listCredentials(userB.id)).find((c) => c.provider === "gemini")?.last4).toBe("9999");
+        expect((await getGeminiTtsProvider(userB.id)).ok).toBe(true);
+      } finally {
+        if (prevEnvGemini === undefined) delete process.env.GEMINI_API_KEY;
+        else process.env.GEMINI_API_KEY = prevEnvGemini;
+        if (prevEnvGroq === undefined) delete process.env.GROQ_API_KEY;
+        else process.env.GROQ_API_KEY = prevEnvGroq;
+
+        await prisma.apiCredential.deleteMany({
+          where: { userId: { in: [userA.id, userB.id] } },
+        });
+        await prisma.user.deleteMany({
+          where: { id: { in: [userA.id, userB.id] } },
+        });
+      }
+    },
+    30_000,
+  );
 });
 

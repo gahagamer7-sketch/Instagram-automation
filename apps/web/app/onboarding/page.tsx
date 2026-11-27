@@ -30,7 +30,16 @@ async function OnboardingContent() {
   const userChannel = currentUser?.channel;
 
   const [geminiCred, channel, settings] = await Promise.all([
-    prisma.apiCredential.findUnique({ where: { provider: "gemini" } }),
+    currentUser?.user?.id
+      ? prisma.apiCredential.findUnique({
+          where: {
+            userId_provider: {
+              userId: currentUser.user.id,
+              provider: "gemini",
+            },
+          },
+        })
+      : Promise.resolve(null),
     userChannel
       ? prisma.channel.findUnique({
           where: { id: userChannel.id },

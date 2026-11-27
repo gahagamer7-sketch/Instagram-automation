@@ -10,6 +10,7 @@ import {
 import { scoreNiche, type NicheScores, type NicheCandidateInput } from "@/lib/niche";
 import { getActiveSkillText } from "@/lib/skills";
 import { getAiProvider } from "@/lib/credentials";
+import { getCurrentUser } from "@/lib/session";
 
 
 export interface NicheActionResult {
@@ -56,10 +57,11 @@ export async function discoverNichesAction(
   // Google Trends — reserved, hozircha bo'sh (TZ 4.0: scraping yo'q).
   await new GoogleTrendsProvider().checkConnection().catch(() => undefined);
 
-  // LLM orqali qo'shimcha nomzodlarni generatsiya qilish (agar Gemini kalit bo'lsa).
+  // LLM orqali qo'shimcha nomzodlarni generatsiya qilish (agar foydalanuvchining AI kaliti bo'lsa).
   let llmSignals: TrendSignal[] = [];
   try {
-    const providerLookup = await getAiProvider();
+    const currentUser = await getCurrentUser();
+    const providerLookup = await getAiProvider("gemini", currentUser?.user?.id);
     if (providerLookup.ok) {
       const skillText = await getActiveSkillText();
       const skillCtx = skillText

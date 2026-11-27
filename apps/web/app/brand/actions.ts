@@ -3,6 +3,7 @@
 import { prisma } from "@autochannel/db";
 import { refresh } from "next/cache";
 import { getAiProvider } from "@/lib/credentials";
+import { getCurrentUser } from "@/lib/session";
 import { getActiveSkillText } from "@/lib/skills";
 import {
   type BrandKitData,
@@ -28,7 +29,8 @@ export async function generateBrandAction(niche: string): Promise<BrandActionRes
   const targetNiche = niche?.trim() || "Foydali Ma'lumotlar";
 
   try {
-    const providerLookup = await getAiProvider();
+    const currentUser = await getCurrentUser();
+    const providerLookup = await getAiProvider("gemini", currentUser?.user?.id);
     if (providerLookup.ok) {
       const skillText = await getActiveSkillText();
       const prompt = buildBrandPrompt(targetNiche, skillText ?? undefined);
@@ -70,6 +72,7 @@ export async function saveBrandKitAction(
       return { ok: false, message: "Kanal nomi tanlanmagan." };
     }
 
+    const currentUser = await getCurrentUser();
     const avatar = selectedAvatarSvg || data.avatars[0] || "";
 
     await prisma.$transaction(async (tx) => {
@@ -90,11 +93,14 @@ export async function saveBrandKitAction(
         },
       });
 
-      // 2. Kanalni topish yoki yaratish, brend kitini biriktirish
-      const channel = await tx.channel.findFirst();
+      // 2. Foydalanuvchining kanalini topish yoki yaratish, brend kitini biriktirish
+      const channel = currentUser?.user?.id
+        ? await tx.channel.findFirst({ where: { userId: currentUser.user.id } })
+        : await tx.channel.findFirst();
       if (!channel) {
         await tx.channel.create({
           data: {
+            userId: currentUser?.user?.id,
             name: data.chosenName,
             brandKitId: brandKit.id,
             status: "setup",

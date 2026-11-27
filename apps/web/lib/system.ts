@@ -29,10 +29,12 @@ async function loadSystemSnapshot(userId?: string): Promise<SystemSnapshot> {
 
     const [settings, connected, connectedChannelCount] = await Promise.all([
       prisma.appSetting.findFirst(),
-      prisma.apiCredential.findMany({
-        where: { status: "connected" },
-        select: { provider: true },
-      }),
+      userId
+        ? prisma.apiCredential.findMany({
+            where: { userId, status: "connected" },
+            select: { provider: true },
+          })
+        : Promise.resolve([]),
       prisma.channel.count({
         where: channelWhere,
       }),
