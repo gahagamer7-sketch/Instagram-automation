@@ -487,7 +487,7 @@ export function VideoCreatorStudio({
                 <div className="flex items-center justify-between w-full mb-2 gap-2">
                   <span className="flex items-center gap-1.5 font-heading text-sm font-bold text-text">
                     <Brain className="h-4 w-4 text-violet-300" aria-hidden />
-                    Gemini 2.0 Flash
+                    Gemini 3.8 Flash
                   </span>
                   <span className="inline-flex items-center gap-1 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-violet-300 border border-primary/30">
                     Chuqur Mantiq

@@ -94,7 +94,7 @@ AutoChannel is organized as a high-performance **Turborepo** monorepo:
 - **Monorepo Manager**: [Turborepo](https://turbo.build/), [pnpm](https://pnpm.io/)
 - **Database & ORM**: [PostgreSQL](https://www.postgresql.org/) ([Neon Serverless](https://neon.tech/)), [Prisma 6](https://www.prisma.io/)
 - **Local Dev Database**: Embedded [PGlite](https://pglite.dev/) (PostgreSQL 18 via WebAssembly)
-- **AI Models**: [Google Gemini 2.0 Flash / Pro](https://ai.google.dev/)
+- **AI Models**: [Google Gemini 3.8 Flash / TTS](https://ai.google.dev/) & Groq Llama 3.3
 - **OAuth & APIs**: Meta Graph API v21.0 (Facebook Login for Business, Instagram Unified Login)
 - **Security**: Web Crypto API, AES-256-GCM, HMAC-SHA256, Secure HttpOnly Cookie Sessions
 
