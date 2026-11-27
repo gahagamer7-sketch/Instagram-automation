@@ -26,16 +26,16 @@ export function RegisterForm() {
   return (
     <div className="mx-auto w-full max-w-md space-y-6">
       <div className="text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-indigo-500 shadow-[0_8px_24px_rgba(37,99,235,0.35)] text-white">
-          <UserPlus className="h-7 w-7" />
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl gradient-brand shadow-[0_8px_24px_rgba(124,58,237,0.4)] text-white">
+          <UserPlus className="h-7 w-7" aria-hidden />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-text">Hisob yaratish</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-text">Hisob yaratish</h1>
         <p className="mt-1.5 text-xs text-muted">
           AutoChannel AI Video Studio&apos;da shaxsiy hisobingizni oching
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <div className="card p-6">
         <form action={formAction} className="space-y-4">
           {state && !state.ok && state.message && (
             <Alert tone="danger">{state.message}</Alert>

@@ -4,11 +4,11 @@ import { cn } from "@/lib/cn";
 export type Tone = "neutral" | "primary" | "success" | "warning" | "danger";
 
 const tones: Record<Tone, string> = {
-  neutral: "border-border bg-surface-2 text-muted",
-  primary: "border-primary/40 bg-primary/10 text-primary",
-  success: "border-success/40 bg-success/10 text-success",
-  warning: "border-warning/40 bg-warning/10 text-warning",
-  danger: "border-danger/40 bg-danger/10 text-danger",
+  neutral: "border-border bg-surface-2/80 text-muted",
+  primary: "border-primary/40 bg-primary/15 text-violet-300",
+  success: "border-success/40 bg-success/15 text-emerald-300",
+  warning: "border-warning/40 bg-warning/15 text-amber-300",
+  danger: "border-danger/40 bg-danger/15 text-red-300",
 };
 
 export function Badge({
@@ -53,16 +53,16 @@ export function StatusDot({
             : "bg-muted";
 
   return (
-    <span className="relative flex h-2.5 w-2.5 shrink-0" aria-hidden>
+    <span className="relative flex h-2 w-2 shrink-0" aria-hidden>
       {pulse && (
         <span
           className={cn(
-            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-60",
+            "absolute inline-flex h-full w-full animate-ping rounded-full opacity-65",
             color,
           )}
         />
       )}
-      <span className={cn("relative inline-flex h-2.5 w-2.5 rounded-full", color)} />
+      <span className={cn("relative inline-flex h-2 w-2 rounded-full", color)} />
     </span>
   );
 }

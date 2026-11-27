@@ -24,11 +24,11 @@ export function ProviderCard({
   const status = credential ? (STATUS[credential.status] ?? STATUS.unverified!) : undefined;
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col hover:border-primary/40">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="font-semibold">{meta.label}</h3>
-          <p className="mt-1 text-sm text-muted">{meta.description}</p>
+          <h3 className="font-heading text-base font-semibold text-text">{meta.label}</h3>
+          <p className="mt-1 text-sm text-muted leading-relaxed">{meta.description}</p>
         </div>
         {status ? (
           <Badge tone={status.tone}>{status.label}</Badge>
