@@ -272,9 +272,14 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
       "-f",
       "lavfi",
       "-i",
-      `color=c=${styleProfile.renderConfig.bgHex}:s=1080x1920:r=30:d=${roundedDuration}`,
+      `color=c=${styleProfile.renderConfig.bgHex}:s=1080x1920:r=24:d=${roundedDuration}`,
     );
   }
+
+  const isServerless = !!(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const preset = isServerless ? "ultrafast" : "veryfast";
+  const crf = isServerless ? "28" : "23";
+  const fps = isServerless ? "24" : "30";
 
   const buildEncodeArgs = (vf: string) => [
     "-y",
@@ -282,21 +287,19 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     "-i",
     audioPath,
     "-vf",
-    vf,
+    `${vf},fps=${fps}`,
     "-c:v",
     "libx264",
     "-preset",
-    "veryfast",
+    preset,
     "-crf",
-    "23",
+    crf,
     "-pix_fmt",
     "yuv420p",
     "-c:a",
     "aac",
     "-b:a",
-    "192k",
-    "-af",
-    "loudnorm=I=-14:LRA=11:TP=-1.5", // TZ 4.5: LUFS -14 ovoz balandligi me'yori
+    "128k",
     "-t",
     String(roundedDuration),
     videoPath,
@@ -321,20 +324,34 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
   }
 
   // 3. Muqova rasmini (1080x1920 JPEG) videoning 1-soniyasidan ajratib olish
-  const coverArgs = [
-    "-y",
-    "-ss",
-    "00:00:01.000",
-    "-i",
-    videoPath,
-    "-vframes",
-    "1",
-    "-q:v",
-    "2",
-    coverPath,
-  ];
-
-  await runFfmpeg(ffmpegBin, coverArgs, "Muqova ajratishda FFmpeg xatosi");
+  if (isServerless) {
+    // Serverless: tezkor muqova — inputdan 0-kadr
+    const coverFilter = options.backgroundMedia
+      ? "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1"
+      : `color=c=${styleProfile.renderConfig.bgHex}:s=1080x1920:r=1:d=1`;
+    const coverInputArgs = options.backgroundMedia
+      ? ["-i", options.backgroundMedia.path.replace(/\\/g, "/")]
+      : ["-f", "lavfi", "-i", coverFilter];
+    await runFfmpeg(
+      ffmpegBin,
+      ["-y", ...coverInputArgs, "-vframes", "1", "-q:v", "5", coverPath],
+      "Muqova ajratishda FFmpeg xatosi",
+    );
+  } else {
+    const coverArgs = [
+      "-y",
+      "-ss",
+      "00:00:01.000",
+      "-i",
+      videoPath,
+      "-vframes",
+      "1",
+      "-q:v",
+      "2",
+      coverPath,
+    ];
+    await runFfmpeg(ffmpegBin, coverArgs, "Muqova ajratishda FFmpeg xatosi");
+  }
 
   return {
     videoPath,

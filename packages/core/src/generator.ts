@@ -98,7 +98,9 @@ export async function createVideoFromIdea(
 
           if (file?.link) {
             const bgResponse = await fetch(file.link, {
-              signal: AbortSignal.timeout(30_000),
+              signal: AbortSignal.timeout(
+                process.env.VERCEL ? 8_000 : 30_000,
+              ),
             });
             if (bgResponse.ok) {
               const bgBuffer = Buffer.from(await bgResponse.arrayBuffer());
