@@ -10,8 +10,15 @@ const nextConfig: NextConfig = {
     "@autochannel/db",
     "@autochannel/integrations",
   ],
-  // Prisma'ning query engine'i Node.js runtime'da tashqarida qolsin.
-  serverExternalPackages: ["@prisma/client", ".prisma/client"],
+  // Prisma va FFmpeg native paketlari runtime'da tashqarida qolsin.
+  serverExternalPackages: ["@prisma/client", ".prisma/client", "ffmpeg-static"],
+  outputFileTracingIncludes: {
+    "/reels/create": [
+      "./node_modules/ffmpeg-static/**/*",
+      "../../node_modules/.pnpm/ffmpeg-static*/node_modules/ffmpeg-static/**/*",
+      "../../packages/core/fonts/**/*",
+    ],
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

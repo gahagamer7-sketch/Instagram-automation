@@ -1,9 +1,14 @@
+import { existsSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import {
   parseScriptResponse,
   buildScriptPrompt,
   validateScriptQa,
   buildAssSubtitles,
+  getRenderDir,
+  getUploadsDir,
+  resolveFfmpegPath,
 } from "./index";
 
 describe("Script Engine", () => {
@@ -116,6 +121,31 @@ describe("FFmpeg Renderer (ASS Subtitles)", () => {
     expect(ass).toContain("Courier New");
     expect(ass).toContain("{\\c&H002626DC&}MATNI{\\c}");
     expect(ass).toContain("1080×1920 AI Studio");
+  });
+});
+
+describe("Serverless & Vercel Runtime Paths", () => {
+  it("Vercel muhitida yozish mumkin bo'lgan os.tmpdir() yo'llarini qaytaradi", () => {
+    const prevVercel = process.env.VERCEL;
+    process.env.VERCEL = "1";
+    try {
+      const renderDir = getRenderDir("run_test");
+      const uploadsDir = getUploadsDir();
+      expect(renderDir.startsWith(tmpdir())).toBe(true);
+      expect(uploadsDir.startsWith(tmpdir())).toBe(true);
+      expect(renderDir).not.toContain("/var/task");
+    } finally {
+      if (prevVercel === undefined) delete process.env.VERCEL;
+      else process.env.VERCEL = prevVercel;
+    }
+  });
+
+  it("resolveFfmpegPath mavjud FFmpeg binariysini topadi", () => {
+    const ffmpegPath = resolveFfmpegPath();
+    expect(ffmpegPath).toBeTruthy();
+    if (ffmpegPath !== "ffmpeg") {
+      expect(existsSync(ffmpegPath)).toBe(true);
+    }
   });
 });
 

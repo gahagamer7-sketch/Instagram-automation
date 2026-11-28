@@ -2,6 +2,7 @@
 import { put } from "@vercel/blob";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { getUploadsDir } from "./tmp-paths";
 
 export interface StorageUploadResult {
   videoUrl: string;
@@ -9,7 +10,7 @@ export interface StorageUploadResult {
 }
 
 /**
- * Bitta faylni yuklaydi. Token bo'lsa Vercel Blob'ga, bo'lmasa lokal diskka yozadi.
+ * Bitta faylni yuklaydi. Token bo'lsa Vercel Blob'ga, bo'lmasa yoziladigan tmp papkaga saqlaydi.
  */
 export async function uploadMediaFile(
   data: Buffer,
@@ -27,8 +28,8 @@ export async function uploadMediaFile(
     return blob.url;
   }
 
-  // Lokal fallback (bepul dev muhit yoki token kiritilmaganda)
-  const localDir = join(process.cwd(), "tmp", "uploads");
+  // Lokal yoki /tmp fallback (token kiritilmaganda)
+  const localDir = getUploadsDir();
   await mkdir(localDir, { recursive: true });
   const localFileName = pathname.replace(/\//g, "_");
   const localFilePath = join(localDir, localFileName);
@@ -57,4 +58,3 @@ export async function uploadVideoAndCover(
 
   return { videoUrl, coverUrl };
 }
-

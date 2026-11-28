@@ -1,7 +1,10 @@
-// FFmpeg orqali 1080x1920 (9:16) Reels video montaji va subtitr integratsiyasi — TZ 4.4.
+// FFmpeg orqali 1080x1920 (9:16) vertikal Reels video montaji va subtitr integratsiyasi — TZ 4.4.
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { getAnimationStyle, type AnimationStyleId } from "./animation-styles";
 import type { SceneCue } from "./script-engine";
 
@@ -24,6 +27,65 @@ export interface RenderResult {
   durationSec: number;
 }
 
+/**
+ * FFmpeg binariy yo'lini aniqlaydi (env -> ffmpeg-static -> tizim PATH).
+ */
+export function resolveFfmpegPath(): string {
+  const envPath = process.env.FFMPEG_PATH;
+  if (envPath && existsSync(/*turbopackIgnore: true*/ envPath)) {
+    return envPath;
+  }
+
+  try {
+    const req = createRequire(import.meta.url);
+    const staticPath = req("ffmpeg-static") as string | null;
+    if (staticPath && existsSync(/*turbopackIgnore: true*/ staticPath)) {
+      return staticPath;
+    }
+  } catch {
+    // Zaxira qidiruvga o'tamiz
+  }
+
+  const binName = process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg";
+  const localModuleBin = join(process.cwd(), "node_modules", "ffmpeg-static", binName);
+  if (existsSync(/*turbopackIgnore: true*/ localModuleBin)) {
+    return localModuleBin;
+  }
+
+  return "ffmpeg";
+}
+
+function resolveFontsDir(): string | null {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const bundled = join(here, "..", "fonts");
+  if (existsSync(/*turbopackIgnore: true*/ join(bundled, "DejaVuSans-Bold.ttf"))) {
+    return bundled;
+  }
+  const cwdFonts = join(process.cwd(), "packages", "core", "fonts");
+  if (existsSync(/*turbopackIgnore: true*/ join(cwdFonts, "DejaVuSans-Bold.ttf"))) {
+    return cwdFonts;
+  }
+  return null;
+}
+
+function escapeFfmpegFilterPath(p: string): string {
+  return p.replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "'\\''");
+}
+
+function runFfmpeg(ffmpegBin: string, args: string[], errorPrefix: string): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const proc = spawn(ffmpegBin, args);
+    let errOutput = "";
+
+    proc.stderr.on("data", (d) => (errOutput += d.toString()));
+    proc.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`${errorPrefix} (${code}): ${errOutput.slice(-600)}`));
+    });
+    proc.on("error", (err) => reject(err));
+  });
+}
+
 function formatAssTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -37,7 +99,11 @@ function formatAssTime(seconds: number): string {
 /**
  * Vaqt oraliqlarini (masalan: "0-3s", "3-15s") soniyalar shaklida parslaydi.
  */
-function parseTimeRange(timeRange: string, fallbackStart: number, fallbackDuration: number): { start: number; end: number } {
+function parseTimeRange(
+  timeRange: string,
+  fallbackStart: number,
+  fallbackDuration: number,
+): { start: number; end: number } {
   const match = timeRange.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)/);
   if (match && match[1] && match[2]) {
     const start = parseFloat(match[1]);
@@ -109,10 +175,34 @@ Dialogue: 0,0:00:00.00,${totalFormatted},BrandFooter,,0,0,0,,1080×1920 AI Studi
   return header + events.join("\n") + "\n";
 }
 
+async function readWavDurationSec(filePath: string): Promise<number | null> {
+  try {
+    const buf = await readFile(filePath);
+    if (
+      buf.length >= 44 &&
+      buf.subarray(0, 4).toString("ascii") === "RIFF" &&
+      buf.subarray(8, 12).toString("ascii") === "WAVE"
+    ) {
+      const byteRate = buf.readUInt32LE(28);
+      if (byteRate > 0) {
+        return (buf.length - 44) / byteRate;
+      }
+    }
+  } catch {
+    // WAV o'qishda xatolik bo'lsa ffprobe fallback ishlaydi
+  }
+  return null;
+}
+
 /**
- * FFmpeg yordamida audio faylning aniq davomiyligini aniqlaydi.
+ * Audio faylning aniq davomiyligini aniqlaydi (WAV sarlavhasi -> ffprobe -> 30s).
  */
 export async function getMediaDuration(filePath: string): Promise<number> {
+  const wavDuration = await readWavDurationSec(filePath);
+  if (wavDuration && wavDuration > 0) {
+    return wavDuration;
+  }
+
   return new Promise((resolve) => {
     const proc = spawn("ffprobe", [
       "-v",
@@ -143,6 +233,7 @@ export async function getMediaDuration(filePath: string): Promise<number> {
 export async function renderReelsVideo(options: RenderOptions): Promise<RenderResult> {
   const { audioPath, shotList, channelName, styleId, outputDir } = options;
   const styleProfile = getAnimationStyle(styleId);
+  const ffmpegBin = resolveFfmpegPath();
 
   await mkdir(outputDir, { recursive: true });
 
@@ -158,13 +249,14 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
   const coverPath = join(outputDir, "cover.jpg");
 
   // 2. FFmpeg bilan video yig'ish (Background + Audio + Subtitrlar)
-  const escapedAssPath = assPath
-    .replace(/\\/g, "/")
-    .replace(/:/g, "\\:")
-    .replace(/'/g, "'\\''");
+  const escapedAssPath = escapeFfmpegFilterPath(assPath);
+  const fontsDir = resolveFontsDir();
+  const assFilter = fontsDir
+    ? `ass='${escapedAssPath}':fontsdir='${escapeFfmpegFilterPath(fontsDir)}'`
+    : `ass='${escapedAssPath}'`;
 
   const inputArgs: string[] = [];
-  let videoFilter = `vignette=PI/4,ass='${escapedAssPath}'`;
+  let baseVideoFilter = "vignette=PI/4";
 
   if (options.backgroundMedia) {
     const bgPath = options.backgroundMedia.path.replace(/\\/g, "/");
@@ -173,7 +265,8 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     } else {
       inputArgs.push("-loop", "1", "-i", bgPath);
     }
-    videoFilter = `scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,vignette=PI/5,ass='${escapedAssPath}'`;
+    baseVideoFilter =
+      "scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,vignette=PI/5";
   } else {
     inputArgs.push(
       "-f",
@@ -183,13 +276,13 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     );
   }
 
-  const ffmpegArgs = [
+  const buildEncodeArgs = (vf: string) => [
     "-y",
     ...inputArgs,
     "-i",
     audioPath,
     "-vf",
-    videoFilter,
+    vf,
     "-c:v",
     "libx264",
     "-preset",
@@ -209,17 +302,23 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     videoPath,
   ];
 
-  await new Promise<void>((resolve, reject) => {
-    const proc = spawn("ffmpeg", ffmpegArgs);
-    let errOutput = "";
+  try {
+    await runFfmpeg(ffmpegBin, buildEncodeArgs(`${baseVideoFilter},${assFilter}`), "FFmpeg xatosi");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.toLowerCase() : "";
+    const isSubtitleFilterIssue =
+      msg.includes("no such filter") ||
+      msg.includes("fontconfig") ||
+      msg.includes("libass") ||
+      msg.includes("ass");
 
-    proc.stderr.on("data", (d) => (errOutput += d.toString()));
-    proc.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`FFmpeg xatosi (${code}): ${errOutput.slice(-500)}`));
-    });
-    proc.on("error", (err) => reject(err));
-  });
+    if (!isSubtitleFilterIssue) {
+      throw err;
+    }
+
+    console.warn("[renderer] ASS subtitr filtri ishlamadi, subtitrsiz zaxira render bajarilmoqda.");
+    await runFfmpeg(ffmpegBin, buildEncodeArgs(baseVideoFilter), "FFmpeg zaxira xatosi");
+  }
 
   // 3. Muqova rasmini (1080x1920 JPEG) videoning 1-soniyasidan ajratib olish
   const coverArgs = [
@@ -235,14 +334,7 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     coverPath,
   ];
 
-  await new Promise<void>((resolve, reject) => {
-    const proc = spawn("ffmpeg", coverArgs);
-    proc.on("close", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`Muqova ajratishda FFmpeg xatosi (${code})`));
-    });
-    proc.on("error", (err) => reject(err));
-  });
+  await runFfmpeg(ffmpegBin, coverArgs, "Muqova ajratishda FFmpeg xatosi");
 
   return {
     videoPath,
@@ -250,4 +342,3 @@ export async function renderReelsVideo(options: RenderOptions): Promise<RenderRe
     durationSec: roundedDuration,
   };
 }
-

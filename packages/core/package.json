@@ -6,7 +6,8 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./styles": "./src/animation-styles.ts"
+    "./styles": "./src/animation-styles.ts",
+    "./tmp-paths": "./src/tmp-paths.ts"
   },
   "scripts": {
     "worker": "tsx src/worker.ts",
@@ -17,7 +18,8 @@
     "@autochannel/crypto": "workspace:*",
     "@autochannel/db": "workspace:*",
     "@autochannel/integrations": "workspace:*",
-    "@vercel/blob": "^2.9.0"
+    "@vercel/blob": "^2.9.0",
+    "ffmpeg-static": "^5.3.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

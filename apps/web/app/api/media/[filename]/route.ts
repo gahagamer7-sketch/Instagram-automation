@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
+import { getUploadsDir } from "@autochannel/core/tmp-paths";
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +11,7 @@ export async function GET(
   const { filename } = await params;
   // Xavfsizlik: path traversal himoyasi
   const safeFilename = filename.replace(/[^a-zA-Z0-9_.-]/g, "");
-  const filePath = join(process.cwd(), "tmp", "uploads", safeFilename);
+  const filePath = join(getUploadsDir(), safeFilename);
 
   if (!existsSync(filePath)) {
     return NextResponse.json({ error: "Fayl topilmadi" }, { status: 404 });

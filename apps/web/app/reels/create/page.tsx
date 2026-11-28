@@ -3,6 +3,8 @@ import { CardSkeleton } from "@/components/ui/skeleton";
 import { VideoCreatorStudio } from "@/components/reels/video-creator-studio";
 import { getCurrentUser } from "@/lib/session";
 
+export const maxDuration = 60;
+
 export const metadata = {
   title: "Video Yaratish Studiyasi — AutoChannel",
   description: "6 xil animatsiya uslubi asosida 1080×1920 Full HD video ishlab chiqarish.",
