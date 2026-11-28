@@ -1,5 +1,5 @@
 // Media fayllarni Vercel Blob yoki lokal storage'ga yuklash — TZ 5.1.
-import { put } from "@vercel/blob";
+import { put, getDownloadUrl } from "@vercel/blob";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getUploadsDir } from "./tmp-paths";
@@ -21,11 +21,11 @@ export async function uploadMediaFile(
 
   if (token) {
     const blob = await put(pathname, data, {
-      access: "public",
+      access: "private",
       token,
       contentType,
     });
-    return blob.url;
+    return blob.downloadUrl;
   }
 
   // Lokal yoki /tmp fallback (token kiritilmaganda)
